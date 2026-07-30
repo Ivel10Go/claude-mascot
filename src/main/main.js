@@ -1,7 +1,7 @@
 // App entrypoint: single-instance guard, overlay windows, hook daemon, tray.
 // This stays the only place the pieces are wired together.
 
-const { app, Tray, Menu, shell, ipcMain } = require('electron');
+const { app, Tray, Menu, shell, ipcMain, screen } = require('electron');
 const overlay = require('./overlay-windows');
 const config = require('./state/config');
 const store = require('./state/store');
@@ -159,6 +159,31 @@ function buildTrayMenu() {
         click: () => config.set({ petCount: n }),
       })),
     },
+    // Only worth showing when there is a choice to make.
+    ...(screen.getAllDisplays().length > 1 ? [{
+      label: 'Bildschirm',
+      submenu: [
+        {
+          label: 'Nur Hauptbildschirm',
+          type: 'radio',
+          checked: (cfg.displayMode ?? 'primary') === 'primary',
+          click: () => config.set({ displayMode: 'primary' }),
+        },
+        ...overlay.listDisplays().map(d => ({
+          label: d.label,
+          type: 'radio',
+          checked: cfg.displayMode === d.id,
+          click: () => config.set({ displayMode: d.id }),
+        })),
+        { type: 'separator' },
+        {
+          label: 'Auf allen Bildschirmen',
+          type: 'radio',
+          checked: cfg.displayMode === 'all',
+          click: () => config.set({ displayMode: 'all' }),
+        },
+      ],
+    }] : []),
     {
       label: 'Sprache',
       submenu: [
@@ -184,18 +209,31 @@ function refreshTray() {
  * Settings that do something beyond being stored: start or stop the window
  * watcher, and register with Windows' startup list.
  */
+let lastDisplayMode = null;
+
 function applySideEffects(cfg) {
+  // Which screens the mascot lives on can only change by rebuilding the
+  // overlays: `transparent` is fixed at construction, so they cannot be moved
+  // or resized onto a different display.
+  const mode = cfg.displayMode ?? 'primary';
+  if (lastDisplayMode !== null && mode !== lastDisplayMode) overlay.rebuild();
+  lastDisplayMode = mode;
+  store.patchQuiet('displays', overlay.listDisplays());
+
   const wantEdges = cfg.windowEdges !== false;
   if (wantEdges && !windowWatcher.isRunning()) {
     windowWatcher.start(rects => {
-      store.patchQuiet('windows', { count: rects.length, at: Date.now() });
+      store.patchQuiet('windows', { enabled: true, count: rects.length, at: Date.now() });
       overlay.sendPlatforms(rects);
     });
   } else if (!wantEdges && windowWatcher.isRunning()) {
     windowWatcher.stop();
-    store.patchQuiet('windows', { count: 0, at: Date.now() });
     overlay.sendPlatforms([]);
   }
+  // Always record the setting, so "turned off" is distinguishable from
+  // "on but nothing reported yet" — otherwise a broken watcher looks
+  // identical to a disabled one.
+  if (!wantEdges) store.patchQuiet('windows', { enabled: false, count: 0, at: Date.now() });
 
   if (app.getLoginItemSettings().openAtLogin !== Boolean(cfg.autostart)) {
     app.setLoginItemSettings({ openAtLogin: Boolean(cfg.autostart), args: [] });
@@ -205,7 +243,7 @@ function applySideEffects(cfg) {
 app.whenReady().then(async () => {
   const cfg = config.load();
 
-  overlay.init();
+  overlay.init({ getConfig: () => config.get() });
   overlay.setVisible(cfg.visible !== false);
 
   await startDaemon();
@@ -228,7 +266,11 @@ app.whenReady().then(async () => {
   });
 
   dashboard.init({
-    getState: () => ({ ...store.get(), hooksInstalled: hooksInstalled() }),
+    getState: () => ({
+      ...store.get(),
+      hooksInstalled: hooksInstalled(),
+      displays: overlay.listDisplays(),
+    }),
     getConfig: () => config.get(),
     setConfig: patch => config.set(patch),
   });

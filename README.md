@@ -68,6 +68,10 @@ npm run doctor
 | GPU load and temperature | `nvidia-smi` every 15s, self-disabling if absent |
 | Window positions, so it can stand on your title bars | A long-lived PowerShell sidecar that P/Invokes `EnumWindows` and streams JSON lines. Costs ~88MB of RSS — turn it off with the "Walk on window edges" setting |
 
+On a multi-monitor machine the mascot lives on the primary screen only —
+one per screen adds up fast. The tray menu and the dashboard let you pick a
+different screen, or put one on every screen.
+
 The mascot climbs the screen's own sides to get anywhere. That is not
 decoration: on a normal desktop every window floats clear of the taskbar, so
 from the floor there is no ledge within jumping range and no window side low

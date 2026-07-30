@@ -294,12 +294,27 @@ if (probe) {
     `x=${thrown.x.toFixed(0)} y=${thrown.y.toFixed(0)} mode=${thrown.mode} escaped=${escaped}`);
 }
 
+// Screen selection. The failure that matters is ending up with no overlay at
+// all — a stale display id from an unplugged monitor must fall back, not
+// leave the mascot with nowhere to live.
+const displays = JSON.parse((await request('GET', '/state')).text).displays;
+if (Array.isArray(displays) && displays.length) {
+  const active = displays.filter(d => d.active);
+  check('a screen is always chosen', active.length >= 1,
+    `${active.length}/${displays.length} active — ${displays.map(d => `${d.label}${d.active ? ' ✓' : ''}`).join(', ')}`);
+} else {
+  console.log('SKIP  screen selection  — no display list reported');
+}
+
 // The window watcher feeds real title bars in as platforms.
 const winState = JSON.parse((await request('GET', '/state')).text).windows;
-if (winState) {
+if (winState?.enabled === false) {
+  console.log('SKIP  window watcher  — turned off (windowEdges: false)');
+} else if (winState) {
   check('window watcher feeding platforms', winState.count > 0, `${winState.count} windows`);
 } else {
-  console.log('SKIP  window watcher  — disabled in config');
+  // Enabled but silent: the sidecar failed to start or crashed on launch.
+  check('window watcher feeding platforms', false, 'enabled but nothing reported');
 }
 
 // Machine telemetry. Each source degrades independently, so report what is

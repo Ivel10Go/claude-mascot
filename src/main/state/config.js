@@ -14,6 +14,9 @@ const DEFAULTS = {
   quietHours: null,      // e.g. { from: 23, to: 8 }
   autostart: false,
   daemonPort: 4747,
+  // Which screens get a mascot: 'primary', 'all', or a specific display id.
+  // One mascot per screen is a lot of mascot, so a single screen is the default.
+  displayMode: 'primary',
   // Lets the mascot stand on real window title bars. Costs a long-lived
   // PowerShell sidecar (~88MB RSS, ~0.6% of one core).
   windowEdges: true,

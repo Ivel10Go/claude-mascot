@@ -21,8 +21,29 @@ const MIN_PLATFORM_W = 120;
 const windows = new Map();   // display.id -> { win, area }
 let visible = true;
 let rebuildTimer = null;
+let getConfig = () => ({});
 
-function createForDisplay(display) {
+/**
+ * The displays that should get a mascot.
+ *
+ * `displayMode` is 'primary', 'all', or a specific display id. A saved id that
+ * no longer exists — an unplugged monitor — falls back to the primary rather
+ * than leaving no overlay at all, which would look like the app had died.
+ */
+function chosenDisplays() {
+  const all = screen.getAllDisplays();
+  const mode = getConfig().displayMode ?? 'primary';
+
+  if (mode === 'all') return all;
+  if (mode !== 'primary') {
+    const picked = all.find(d => String(d.id) === String(mode));
+    if (picked) return [picked];
+  }
+  const primary = screen.getPrimaryDisplay();
+  return [all.find(d => d.id === primary.id) ?? all[0]].filter(Boolean);
+}
+
+function createForDisplay(display, { reporter }) {
   // workArea rather than bounds: the mascot should stand on the taskbar's
   // top edge, not behind it.
   const { x, y, width, height } = display.workArea;
@@ -57,17 +78,13 @@ function createForDisplay(display) {
   win.setAlwaysOnTop(true, 'screen-saver');
   win.setIgnoreMouseEvents(true, { forward: true });
   win.loadFile(OVERLAY_HTML);
-  // Exactly one overlay reports what it is doing back to the store. With every
-  // overlay reporting, two displays with different window layouts overwrite
-  // each other's entry and the readings appear to flicker.
-  //
-  // This must key off the actual primary display, not creation order: on this
-  // machine getAllDisplays() returns the secondary first, so ordering picked
-  // the overlay that sees almost no windows.
-  const primary = display.id === screen.getPrimaryDisplay().id;
   win.once('ready-to-show', () => {
     if (visible) win.showInactive();
-    win.webContents.send('mascot:role', { primary });
+    win.webContents.send('mascot:role', { primary: display.id === reporter });
+    // A window rebuilt after a settings change missed the last config
+    // broadcast, so it needs its own copy or it would come up with the
+    // default pet count and language.
+    win.webContents.send('mascot:config', getConfig());
   });
 
   windows.set(display.id, { win, area: display.workArea });
@@ -81,7 +98,20 @@ function destroyAll() {
 
 function rebuild() {
   destroyAll();
-  for (const display of screen.getAllDisplays()) createForDisplay(display);
+  const displays = chosenDisplays();
+
+  // Exactly one overlay reports what it is doing back to the store. With every
+  // overlay reporting, two displays with different window layouts overwrite
+  // each other's entry and the readings appear to flicker.
+  //
+  // Prefer the real primary display — not creation order, since
+  // getAllDisplays() can return the secondary first — but fall back to
+  // whichever display was chosen, or nothing would report at all when the
+  // mascot lives only on a secondary screen.
+  const primaryId = screen.getPrimaryDisplay().id;
+  const reporter = displays.some(d => d.id === primaryId) ? primaryId : displays[0]?.id;
+
+  for (const display of displays) createForDisplay(display, { reporter });
 }
 
 /** Display changes arrive in bursts (docking, resolution switches). */
@@ -90,7 +120,9 @@ function scheduleRebuild() {
   rebuildTimer = setTimeout(() => { rebuildTimer = null; rebuild(); }, 400);
 }
 
-function init() {
+function init(hooks = {}) {
+  if (hooks.getConfig) getConfig = hooks.getConfig;
+
   // While a mascot is being dragged the cursor routinely leaves its hit box,
   // so hover alone can't decide this: a drag pins the overlay interactive
   // until the button comes up, or the pet would be dropped mid-throw.
@@ -183,4 +215,19 @@ function setVisible(next) {
 
 const isVisible = () => visible;
 
-module.exports = { init, broadcast, sendPlatforms, setVisible, isVisible, rebuild, destroyAll };
+/** Displays the settings UI can offer, with the current choice resolved. */
+function listDisplays() {
+  const primaryId = screen.getPrimaryDisplay().id;
+  const active = new Set(chosenDisplays().map(d => d.id));
+  return screen.getAllDisplays().map((d, i) => ({
+    id: String(d.id),
+    label: `Screen ${i + 1} · ${d.size.width}×${d.size.height}${d.id === primaryId ? ' (primary)' : ''}`,
+    isPrimary: d.id === primaryId,
+    active: active.has(d.id),
+  }));
+}
+
+module.exports = {
+  init, broadcast, sendPlatforms, setVisible, isVisible,
+  rebuild, destroyAll, listDisplays,
+};

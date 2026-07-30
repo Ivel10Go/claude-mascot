@@ -138,7 +138,36 @@ function headline(s) {
   }
 }
 
+/**
+ * The screen picker only exists on a multi-monitor machine. Options come from
+ * the main process because only it can enumerate displays.
+ */
+let displaySignature = '';
+function renderDisplays(s, cfg) {
+  const list = s.displays ?? [];
+  $('row-display').hidden = list.length < 2;
+  if (list.length < 2) return;
+
+  const signature = list.map(d => `${d.id}:${d.label}`).join('|');
+  if (signature !== displaySignature) {
+    displaySignature = signature;
+    $('s-display').innerHTML =
+      `<option value="primary">Primary only</option>` +
+      list.map(d => `<option value="${d.id}">${d.label}</option>`).join('') +
+      `<option value="all">All screens</option>`;
+  }
+  const mode = cfg?.displayMode ?? currentMode;
+  if (mode) $('s-display').value = mode;
+
+  // Each screen gets its own mascot, so say so rather than surprising anyone.
+  const screens = list.filter(d => d.active).length;
+  $('pets-hint').textContent = screens > 1 ? `(per screen — ${screens} screens)` : '';
+}
+
+let currentMode = 'primary';
+
 window.dash.onState(s => {
+  renderDisplays(s, null);
   renderLimits(s);
   renderUsage(s);
   renderMachine(s);
@@ -154,6 +183,8 @@ window.dash.onState(s => {
 
 window.dash.onConfig(cfg => {
   locale = cfg.locale === 'en' ? 'en' : 'de';
+  currentMode = cfg.displayMode ?? 'primary';
+  if ($('s-display').options.length) $('s-display').value = currentMode;
   $('s-locale').value = locale;
   $('s-pets').value = cfg.petCount ?? 1;
   $('s-muted').checked = Boolean(cfg.muted);
@@ -163,6 +194,7 @@ window.dash.onConfig(cfg => {
 
 const send = patch => window.dash.setConfig(patch);
 $('s-locale').addEventListener('change', e => { locale = e.target.value; send({ locale: e.target.value }); });
+$('s-display').addEventListener('change', e => { currentMode = e.target.value; send({ displayMode: e.target.value }); });
 $('s-pets').addEventListener('change', e => send({ petCount: Math.max(1, Math.min(8, Number(e.target.value) || 1)) }));
 $('s-muted').addEventListener('change', e => send({ muted: e.target.checked }));
 $('s-edges').addEventListener('change', e => send({ windowEdges: e.target.checked }));
