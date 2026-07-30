@@ -28,8 +28,10 @@ function push() {
 
 function create() {
   win = new BrowserWindow({
-    width: 940,
-    height: 720,
+    // Tall enough to reach the animation switches without scrolling: the
+    // panel below the fold was, in practice, a panel nobody knew existed.
+    width: 1040,
+    height: 940,
     minWidth: 720,
     minHeight: 520,
     show: false,
