@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+<title>Claude Mascot Overlay</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+    /* The window itself is click-through; the renderer only ever re-enables
+       input for the exact moment the cursor is over a mascot. */
+    user-select: none;
+    cursor: default;
+  }
+  #layer {
+    position: absolute;
+    inset: 0;
+  }
+  /* Sibling of .pet, never a child — .pet is flipped with scaleX(-1) when the
+     mascot turns and nested text would render mirrored. */
+  .bubble {
+    position: absolute;
+    left: 0;
+    top: 0;
+    max-width: 260px;
+    padding: 7px 10px;
+    background: #f6f2ea;
+    border: 2px solid #241611;
+    color: #241611;
+    font: 500 12.5px/1.35 "Segoe UI", system-ui, sans-serif;
+    white-space: pre-wrap;
+    opacity: 0;
+    visibility: hidden;
+    will-change: transform, opacity;
+    /* Hard corners and a hard shadow to match the pixel-art body. */
+    box-shadow: 3px 3px 0 rgba(36, 22, 17, 0.28);
+  }
+  .bubble.is-visible { visibility: visible; }
+  /* Tail: a notch punched below the border, positioned per-frame in JS. */
+  .bubble i {
+    position: absolute;
+    bottom: -8px;
+    width: 10px;
+    height: 8px;
+    margin-left: -5px;
+    background: #f6f2ea;
+    border-left: 2px solid #241611;
+    border-right: 2px solid #241611;
+    border-bottom: 2px solid #241611;
+  }
+
+  .pet {
+    position: absolute;
+    left: 0;
+    top: 0;
+    /* Size comes from the rig's own aspect ratio, set in pet.js. */
+    will-change: transform;
+    /* No CSS filter here on purpose: drop-shadow() on a moving element forces
+       a filter pass over the whole full-screen transparent layer every frame.
+       The rig draws its own contact shadow instead. */
+  }
+</style>
+</head>
+<body>
+  <div id="layer"></div>
+  <script type="module" src="./overlay.js"></script>
+</body>
+</html>

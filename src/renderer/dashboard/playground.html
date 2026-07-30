@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rig Playground</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0;
+    padding: 24px;
+    font: 13px/1.4 "Segoe UI", system-ui, sans-serif;
+    background: #f0eee6;
+    color: #3d3a34;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #201d1a; color: #d8d2c8; }
+    .tile { background: #2a2622; border-color: #3a352f; }
+  }
+  h1 { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+  p.sub { margin: 0 0 20px; opacity: 0.65; }
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  .tile {
+    background: #fff;
+    border: 1px solid #ddd7cb;
+    border-radius: 8px;
+    padding: 8px 8px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .stage { height: 96px; display: flex; align-items: flex-end; justify-content: center; }
+  .name { margin-top: 6px; font-size: 11px; opacity: 0.7; font-family: Consolas, monospace; }
+  #metrics {
+    margin: 0 0 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+  }
+  #metrics label { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+  output { font-family: Consolas, monospace; min-width: 34px; opacity: 0.75; }
+</style>
+</head>
+<body>
+  <h1>Rig Playground</h1>
+  <p class="sub">Every animation, running live. The sliders drive the metric modifiers that layer on top.</p>
+
+  <div id="metrics">
+    <label>5h-Limit <input type="range" id="m-limit" min="0" max="100" value="0"><output id="o-limit">0%</output></label>
+    <label>CPU <input type="range" id="m-cpu" min="0" max="100" value="0"><output id="o-cpu">0%</output></label>
+    <label>Akku <input type="range" id="m-batt" min="0" max="100" value="100"><output id="o-batt">100%</output></label>
+    <label>Kontext <input type="range" id="m-ctx" min="0" max="100" value="0"><output id="o-ctx">0%</output></label>
+    <label><input type="checkbox" id="m-charging"> lädt</label>
+  </div>
+
+  <div id="grid"></div>
+  <script type="module" src="./playground.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+out/
+*.log
+
+# Runtime state lives in %APPDATA%/claude-mascot (daemon token, config) and
+# must never end up here, but ignore it anyway in case anyone relocates it.
+statusline-chain.json
+config.json

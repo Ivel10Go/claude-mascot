@@ -1,0 +1,63 @@
+// Small JSON-backed config in the app's userData directory. Writes are
+// debounced and atomic-ish (write to a temp file, then rename) so a crash
+// mid-write can't leave a truncated config behind.
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { app } = require('electron');
+
+const DEFAULTS = {
+  petCount: 1,
+  locale: 'de',          // 'de' | 'en'
+  visible: true,
+  muted: false,          // suppress speech bubbles
+  quietHours: null,      // e.g. { from: 23, to: 8 }
+  autostart: false,
+  daemonPort: 4747,
+};
+
+let file = null;
+let data = { ...DEFAULTS };
+let timer = null;
+const listeners = new Set();
+
+function load() {
+  file = path.join(app.getPath('userData'), 'config.json');
+  try {
+    Object.assign(data, JSON.parse(fs.readFileSync(file, 'utf8')));
+  } catch {
+    // Missing or corrupt config is not worth surfacing — defaults are fine.
+  }
+  return data;
+}
+
+function flush() {
+  timer = null;
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const tmp = `${file}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
+    fs.renameSync(tmp, file);
+  } catch (err) {
+    console.error('[config] write failed:', err.message);
+  }
+}
+
+function get() {
+  return data;
+}
+
+function set(patch) {
+  Object.assign(data, patch);
+  for (const fn of listeners) fn(data);
+  if (timer) clearTimeout(timer);
+  timer = setTimeout(flush, 400);
+  return data;
+}
+
+function onChange(fn) {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+module.exports = { DEFAULTS, load, get, set, onChange, flush };

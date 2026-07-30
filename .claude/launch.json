@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "playground",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/dev-server.mjs"],
+      "port": 5180
+    }
+  ]
+}

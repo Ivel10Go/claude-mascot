@@ -1,0 +1,21 @@
+{
+  "name": "claude-mascot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A Windows desktop pet that reacts to Claude Code and reports your Claude usage limits",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "install-hooks": "node scripts/install-hooks.mjs",
+    "uninstall-hooks": "node scripts/uninstall-hooks.mjs",
+    "build": "electron-builder",
+    "doctor": "node scripts/doctor.mjs",
+    "playground": "node scripts/dev-server.mjs"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "license": "MIT"
+}
