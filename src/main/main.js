@@ -14,12 +14,39 @@ const windowWatcher = require('./collectors/win32-windows');
 const { createDaemon } = require('./daemon/server');
 const { reactionFor, supersedes } = require('../shared/reactions');
 const { trayIcon } = require('./icon');
+const dashboard = require('./dashboard-window');
+
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+
+/**
+ * Whether our hooks are actually registered with Claude Code.
+ *
+ * Not the same as "the credentials file exists" — that is written on first
+ * run whether or not anything was installed. The only honest signal is our
+ * daemon URL appearing in the settings Claude Code actually reads.
+ */
+function hooksInstalled() {
+  try {
+    const file = path.join(os.homedir(), '.claude', 'settings.json');
+    return fs.readFileSync(file, 'utf8').includes('/hook');
+  } catch {
+    return false;
+  }
+}
 
 // A second copy would spawn duplicate overlays and fight over the daemon port.
 if (!app.requestSingleInstanceLock()) {
   app.quit();
   process.exit(0);
 }
+
+// Launching again with --dashboard is how you open the window without going
+// to the tray, so the second copy hands the request over and exits.
+app.on('second-instance', (_event, argv) => {
+  if (argv.includes('--dashboard')) dashboard.open();
+});
 
 // The overlay is not a document window; closing the last one must not exit.
 app.on('window-all-closed', () => {});
@@ -140,6 +167,7 @@ function buildTrayMenu() {
       ],
     },
     { type: 'separator' },
+    { label: 'Dashboard öffnen…', click: () => dashboard.open() },
     {
       label: 'Konfigurationsordner öffnen',
       click: () => shell.openPath(app.getPath('userData')),
@@ -150,6 +178,28 @@ function buildTrayMenu() {
 
 function refreshTray() {
   if (tray) tray.setContextMenu(buildTrayMenu());
+}
+
+/**
+ * Settings that do something beyond being stored: start or stop the window
+ * watcher, and register with Windows' startup list.
+ */
+function applySideEffects(cfg) {
+  const wantEdges = cfg.windowEdges !== false;
+  if (wantEdges && !windowWatcher.isRunning()) {
+    windowWatcher.start(rects => {
+      store.patchQuiet('windows', { count: rects.length, at: Date.now() });
+      overlay.sendPlatforms(rects);
+    });
+  } else if (!wantEdges && windowWatcher.isRunning()) {
+    windowWatcher.stop();
+    store.patchQuiet('windows', { count: 0, at: Date.now() });
+    overlay.sendPlatforms([]);
+  }
+
+  if (app.getLoginItemSettings().openAtLogin !== Boolean(cfg.autostart)) {
+    app.setLoginItemSettings({ openAtLogin: Boolean(cfg.autostart), args: [] });
+  }
 }
 
 app.whenReady().then(async () => {
@@ -177,11 +227,19 @@ app.whenReady().then(async () => {
     store.patchQuiet('speech', { text, ruleId, at: Date.now() });
   });
 
+  dashboard.init({
+    getState: () => ({ ...store.get(), hooksInstalled: hooksInstalled() }),
+    getConfig: () => config.get(),
+    setConfig: patch => config.set(patch),
+  });
+
   // Metrics go to the renderers on change; the tray only cares about config.
   store.onChange(state => overlay.broadcast('mascot:metrics', state));
   config.onChange(next => {
     overlay.broadcast('mascot:config', next);
+    dashboard.sendConfig(next);
     refreshTray();
+    applySideEffects(next);
   });
 
   // Limit readings go stale once no Claude Code session is rendering.
@@ -197,13 +255,10 @@ app.whenReady().then(async () => {
   gpuTelemetry.start();
 
   // Window edges cost a long-lived PowerShell sidecar (~88MB), so they are
-  // opt-out. Without it the mascot simply walks the bottom of the screen.
-  if (cfg.windowEdges !== false) {
-    windowWatcher.start(rects => {
-      store.patchQuiet('windows', { count: rects.length, at: Date.now() });
-      overlay.sendPlatforms(rects);
-    });
-  }
+  // opt-out. Without it the mascot walks the screen and its own edges only.
+  applySideEffects(cfg);
+
+  if (process.argv.includes('--dashboard')) dashboard.open();
 
   // Renderers subscribe on load; one broadcast once they're up is enough.
   setTimeout(() => {
@@ -213,6 +268,7 @@ app.whenReady().then(async () => {
 });
 
 app.on('before-quit', () => {
+  dashboard.destroy();
   jsonlUsage.stop();
   systemTelemetry.stop();
   gpuTelemetry.stop();

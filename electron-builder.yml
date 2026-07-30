@@ -1,0 +1,44 @@
+appId: dev.levi.claude-mascot
+productName: Claude Mascot
+copyright: MIT
+
+directories:
+  output: dist
+  buildResources: build
+
+# Only what the app actually loads at runtime. scripts/ is included because
+# window-watcher.ps1 is spawned and install-hooks is run by the user.
+files:
+  - src/**/*
+  - scripts/**/*
+  - package.json
+  - '!**/*.map'
+
+# PowerShell cannot read out of an asar archive, and window-watcher.ps1 is
+# spawned by path — packed, it would fail at runtime with a file-not-found
+# that only shows up in a built app, never in development.
+asarUnpack:
+  - scripts/**
+
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Claude Mascot
+
+portable:
+  artifactName: ClaudeMascot-${version}-portable.exe
+
+# The app lives in the tray with no main window, so a splash or auto-updater
+# would be more intrusive than useful.
+publish: null

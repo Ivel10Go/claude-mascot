@@ -6,7 +6,6 @@
 // overlap rather than a sampled distance field — crisp at 16px, no guessing.
 
 const zlib = require('node:zlib');
-const { nativeImage } = require('electron');
 
 const GRID = 24;                       // authoring grid, matches the rig
 const BODY = { x: 3, y: 5, w: 18, h: 12 };
@@ -123,9 +122,44 @@ const mascotPNG = size => encodePNG(size, renderMascot(size));
 
 /** Tray icon, built at both DPI steps Windows asks for. */
 function trayIcon() {
+  // Required lazily so the build script can reuse the encoder from plain Node,
+  // where `electron` is not resolvable.
+  const { nativeImage } = require('electron');
   const img = nativeImage.createFromBuffer(mascotPNG(16), { scaleFactor: 1 });
   img.addRepresentation({ scaleFactor: 2, buffer: mascotPNG(32) });
   return img;
 }
 
-module.exports = { renderMascot, encodePNG, mascotPNG, trayIcon };
+/**
+ * Wraps PNGs in an .ico container — what electron-builder needs for the
+ * installer and the executable. Modern Windows reads PNG-compressed icon
+ * entries directly, so no BMP fallback is needed.
+ */
+function encodeICO(sizes = [16, 24, 32, 48, 64, 128, 256]) {
+  const images = sizes.map(size => ({ size, png: mascotPNG(size) }));
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0);              // reserved
+  header.writeUInt16LE(1, 2);              // type: icon
+  header.writeUInt16LE(images.length, 4);
+
+  const dir = Buffer.alloc(16 * images.length);
+  let offset = header.length + dir.length;
+
+  images.forEach((img, i) => {
+    const at = i * 16;
+    // 0 means 256 in the directory's single-byte width/height fields.
+    dir[at] = img.size >= 256 ? 0 : img.size;
+    dir[at + 1] = img.size >= 256 ? 0 : img.size;
+    dir[at + 2] = 0;                       // palette colours
+    dir[at + 3] = 0;                       // reserved
+    dir.writeUInt16LE(1, at + 4);          // colour planes
+    dir.writeUInt16LE(32, at + 6);         // bits per pixel
+    dir.writeUInt32LE(img.png.length, at + 8);
+    dir.writeUInt32LE(offset, at + 12);
+    offset += img.png.length;
+  });
+
+  return Buffer.concat([header, dir, ...images.map(i => i.png)]);
+}
+
+module.exports = { renderMascot, encodePNG, mascotPNG, encodeICO, trayIcon };

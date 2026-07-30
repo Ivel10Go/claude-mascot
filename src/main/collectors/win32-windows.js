@@ -14,7 +14,12 @@ const path = require('node:path');
 const readline = require('node:readline');
 const { spawn } = require('node:child_process');
 
-const SCRIPT = path.join(__dirname, '..', '..', '..', 'scripts', 'window-watcher.ps1');
+// In a packaged build the scripts live beside the asar, not inside it —
+// PowerShell cannot read from an archive. asarUnpack puts them in
+// app.asar.unpacked, which is this same path with the suffix swapped.
+const SCRIPT = path
+  .join(__dirname, '..', '..', '..', 'scripts', 'window-watcher.ps1')
+  .replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`);
 
 // Our own overlays are windows too, and standing on yourself is not a feature.
 const OWN_TITLE = 'Claude Mascot Overlay';

@@ -15,10 +15,14 @@ none of that code is portable — but the character geometry follows the same
 
 ## Status
 
-Working: the overlay, the rig and its 25 animations, the hook daemon, the
-Claude limit/cost readouts, the speech-bubble engine, and machine telemetry.
+Feature-complete for what it set out to do: the overlay, the rig and its 27
+animations, the hook daemon, Claude limit and cost readouts, the speech-bubble
+engine, machine telemetry, window-edge physics with climbing and throwing, the
+dashboard, and a packaged installer.
 
-Not built yet: window-edge physics, the dashboard, and packaging.
+Known gaps: the overlay is a full-screen transparent layer rather than a small
+window per pet (see Notes), and there are no automated tests beyond
+`npm run doctor`, which needs a running instance.
 
 ## Requirements
 
@@ -62,6 +66,12 @@ npm run doctor
 | CPU, memory, disk | `os.cpus()` deltas and `fs.statfs` — syscalls, no subprocess |
 | Battery | `wmic` once a minute for the percentage (~6× cheaper than PowerShell); charging state comes free from Electron's `powerMonitor` events |
 | GPU load and temperature | `nvidia-smi` every 15s, self-disabling if absent |
+| Window positions, so it can stand on your title bars | A long-lived PowerShell sidecar that P/Invokes `EnumWindows` and streams JSON lines. Costs ~88MB of RSS — turn it off with the "Walk on window edges" setting |
+
+The mascot climbs the screen's own sides to get anywhere. That is not
+decoration: on a normal desktop every window floats clear of the taskbar, so
+from the floor there is no ledge within jumping range and no window side low
+enough to grab. You can also pick it up and throw it.
 
 The daemon binds to loopback only and requires a bearer token generated on first
 run, stored in `%APPDATA%/claude-mascot/` — never in this repo.
@@ -81,10 +91,16 @@ transcripts distinguish them and the rates differ (1.25× vs 2× the input rate)
 
 ```bash
 npm start                  # run the app
-npm run doctor             # 21 end-to-end checks against a running instance
+npm run dashboard          # run it with the dashboard already open
+npm run doctor             # 31 end-to-end checks against a running instance
 npm run doctor -- --probe  # also cycle visible reactions so you can watch them
-node scripts/dev-server.mjs # serve the rig playground on :5180
+npm run playground         # serve the rig playground on :5180
+npm run build              # installer + portable exe into dist/
 ```
+
+`npm run build` regenerates `build/icon.ico` from the same geometry as the rig
+and the tray icon, so the installer, the executable and the on-screen mascot
+cannot drift apart. There are no image assets in this repository.
 
 The playground renders every animation at once with live sliders for the
 metric-driven modifiers. It is the fastest way to tune the rig.

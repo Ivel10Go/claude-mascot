@@ -7,3 +7,6 @@ out/
 # must never end up here, but ignore it anyway in case anyone relocates it.
 statusline-chain.json
 config.json
+
+build/
+

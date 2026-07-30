@@ -9,9 +9,11 @@
     "dev": "electron . --dev",
     "install-hooks": "node scripts/install-hooks.mjs",
     "uninstall-hooks": "node scripts/uninstall-hooks.mjs",
-    "build": "electron-builder",
+    "build": "node scripts/gen-icons.mjs && electron-builder",
     "doctor": "node scripts/doctor.mjs",
-    "playground": "node scripts/dev-server.mjs"
+    "playground": "node scripts/dev-server.mjs",
+    "dashboard": "electron . --dashboard",
+    "gen-icons": "node scripts/gen-icons.mjs"
   },
   "devDependencies": {
     "electron": "^33.2.0",
