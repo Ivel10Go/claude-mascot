@@ -26,14 +26,24 @@ const FRAME_MS = 1000 / TARGET_FPS;
 let bounds = { width: window.innerWidth, height: window.innerHeight };
 let metrics = {};
 let interactive = false;
-let reported = { animation: null, fill: null };
+let reported = { animation: null, fill: null, footY: null };
 let last = performance.now();
 let nextFrameDue = 0;
 
+let platforms = [];
+// Only one overlay reports back, or two displays overwrite each other's entry.
+let isPrimary = false;
+window.mascot.onRole(({ primary }) => { isPrimary = !!primary; });
+
 function setPetCount(n) {
-  while (pets.length < n) pets.push(createPet(layer, bounds));
+  while (pets.length < n) {
+    const pet = createPet(layer, bounds);
+    pet.setPlatforms(platforms);
+    pets.push(pet);
+  }
   while (pets.length > n) {
     const pet = pets.pop();
+    if (pet === grabbed) { grabbed = null; window.mascot.setDragging(false); }
     pet.node.remove();
   }
 }
@@ -48,18 +58,45 @@ window.addEventListener('mousemove', e => {
   pointer.x = e.clientX;
   pointer.y = e.clientY;
   pointer.inside = true;
+  if (grabbed) grabbed.dragTo(e.clientX, e.clientY);
 });
 window.addEventListener('mouseleave', () => { pointer.inside = false; });
+
+/** The pet currently held by the cursor, if any. */
+let grabbed = null;
+
+function petAt(x, y) {
+  // Front to back, so the visually topmost pet is the one you grab.
+  for (let i = pets.length - 1; i >= 0; i--) {
+    const b = pets[i].hitBox();
+    if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return pets[i];
+  }
+  return null;
+}
+
+window.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  const pet = petAt(e.clientX, e.clientY);
+  if (!pet) return;
+  grabbed = pet;
+  pet.grabAt(e.clientX, e.clientY);
+  // The cursor will leave the hit box while dragging, so the overlay has to
+  // stay interactive until the button comes up.
+  window.mascot.setDragging(true);
+  e.preventDefault();
+});
+
+window.addEventListener('mouseup', () => {
+  if (!grabbed) return;
+  grabbed.releaseGrab();
+  grabbed = null;
+  window.mascot.setDragging(false);
+});
 
 /** True when the cursor is within any mascot's body box. */
 function overPet() {
   if (!pointer.inside) return false;
-  for (const pet of pets) {
-    const b = pet.hitBox();
-    if (pointer.x >= b.x && pointer.x <= b.x + b.w &&
-        pointer.y >= b.y && pointer.y <= b.y + b.h) return true;
-  }
-  return false;
+  return petAt(pointer.x, pointer.y) !== null;
 }
 
 function frame(now) {
@@ -93,11 +130,24 @@ function frame(now) {
   // Edge-triggered: lets the main process report what the rig is really doing
   // without a per-frame IPC message. bodyFill is quantised so a value drifting
   // in the last decimal doesn't produce a message every frame.
-  const playing = pets[0]?.animation;
-  const fill = pets[0] ? Math.round(pets[0].bodyFill * 100) / 100 : null;
-  if (playing && (playing !== reported.animation || fill !== reported.fill)) {
-    reported = { animation: playing, fill };
-    window.mascot.reportAnimation(playing, fill);
+  const pet = isPrimary ? pets[0] : null;
+  const playing = pet?.animation;
+  const fill = pet ? Math.round(pet.bodyFill * 100) / 100 : null;
+  // Rounded to 4px: enough to tell a title bar from the floor, coarse enough
+  // that a walk cycle's bob doesn't emit a message every frame.
+  const footY = pet ? Math.round(pet.y / 4) * 4 : null;
+  if (playing && (playing !== reported.animation || fill !== reported.fill || footY !== reported.footY)) {
+    reported = { animation: playing, fill, footY };
+    window.mascot.reportAnimation(playing, fill, {
+      footY,
+      petX: Math.round(pet.x),
+      onPlatform: pet ? pet.y < bounds.height - 2 : false,
+      platformCount: platforms.length,
+      // The pet's own decision, not a re-derivation: this distinguishes
+      // "nothing in range" from "in range but never acting on it".
+      jumpTarget: pet.jumpTarget,
+      wallTouch: pet.wallTouch,
+    });
   }
 }
 
@@ -117,6 +167,12 @@ window.mascot.onReaction(({ animation, key, data, petIndex }) => {
 // The hold behind a sticky reaction lapsed — go back to wandering.
 window.mascot.onRelease(() => {
   for (const pet of pets) pet.release();
+});
+
+// Top edges of real windows on this display, in local coordinates.
+window.mascot.onPlatforms(next => {
+  platforms = Array.isArray(next) ? next : [];
+  for (const pet of pets) pet.setPlatforms(platforms);
 });
 
 window.mascot.onConfig(cfg => {

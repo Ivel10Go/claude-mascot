@@ -10,6 +10,7 @@ const credentials = require('./daemon/credentials');
 const jsonlUsage = require('./collectors/jsonl-usage');
 const systemTelemetry = require('./collectors/system');
 const gpuTelemetry = require('./collectors/gpu');
+const windowWatcher = require('./collectors/win32-windows');
 const { createDaemon } = require('./daemon/server');
 const { reactionFor, supersedes } = require('../shared/reactions');
 const { trayIcon } = require('./icon');
@@ -168,8 +169,8 @@ app.whenReady().then(async () => {
   // These flow out of the renderer for the dashboard and the doctor. Stored
   // quietly: broadcasting them would bounce the whole state back to every
   // overlay on every animation change.
-  ipcMain.on('mascot:animation', (_event, { name, bodyFill }) => {
-    store.patchQuiet('playing', { animation: name, bodyFill, at: Date.now() });
+  ipcMain.on('mascot:animation', (_event, { name, bodyFill, place }) => {
+    store.patchQuiet('playing', { animation: name, bodyFill, ...place, at: Date.now() });
   });
 
   ipcMain.on('mascot:bubble', (_event, { text, ruleId }) => {
@@ -195,6 +196,15 @@ app.whenReady().then(async () => {
   systemTelemetry.start().catch(err => console.error('[system]', err.message));
   gpuTelemetry.start();
 
+  // Window edges cost a long-lived PowerShell sidecar (~88MB), so they are
+  // opt-out. Without it the mascot simply walks the bottom of the screen.
+  if (cfg.windowEdges !== false) {
+    windowWatcher.start(rects => {
+      store.patchQuiet('windows', { count: rects.length, at: Date.now() });
+      overlay.sendPlatforms(rects);
+    });
+  }
+
   // Renderers subscribe on load; one broadcast once they're up is enough.
   setTimeout(() => {
     overlay.broadcast('mascot:config', config.get());
@@ -206,6 +216,7 @@ app.on('before-quit', () => {
   jsonlUsage.stop();
   systemTelemetry.stop();
   gpuTelemetry.stop();
+  windowWatcher.stop();
   if (staleTimer) clearInterval(staleTimer);
   if (daemon) daemon.close();
   config.flush();

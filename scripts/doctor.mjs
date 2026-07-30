@@ -241,6 +241,67 @@ if (probe) {
   await request('POST', '/hook', { hook_event_name: 'SessionStart', source: 'startup' });
 }
 
+// Physics, tested directly. The module is pure geometry with no DOM or
+// Electron dependency, so it can be exercised deterministically here instead
+// of hoping the mascot happens to wander onto a window during the run.
+{
+  const { createBody, step } = await import('../src/renderer/overlay/physics.js');
+  const bounds = { width: 1000, height: 600 };
+  const platform = { x0: 300, x1: 700, y: 400 };
+  const tick = 1 / 60;
+
+  // Dropped over a window: must come to rest on its top edge, not the floor.
+  const dropped = createBody(500, 100);
+  dropped.mode = 'air';
+  let landedOnPlatform = false;
+  for (let i = 0; i < 600 && dropped.mode !== 'ground'; i++) {
+    const e = step(dropped, tick, [platform], bounds, 30);
+    if (e.landed && Math.abs(dropped.y - platform.y) < 1) landedOnPlatform = true;
+  }
+  check('falls onto a window edge', landedOnPlatform && dropped.mode === 'ground'
+    && Math.abs(dropped.y - platform.y) < 1,
+    `y=${dropped.y.toFixed(1)} (platform at ${platform.y}) mode=${dropped.mode}`);
+
+  // Dropped past the end of that window: must reach the floor instead.
+  const missed = createBody(100, 100);
+  missed.mode = 'air';
+  for (let i = 0; i < 600 && missed.mode !== 'ground'; i++) step(missed, tick, [platform], bounds, 30);
+  check('falls past a window it misses', Math.abs(missed.y - bounds.height) < 1,
+    `y=${missed.y.toFixed(1)} (floor at ${bounds.height})`);
+
+  // Walking off the edge of a platform must become a fall, not a moonwalk.
+  const walker = createBody(690, platform.y);
+  walker.platform = platform;
+  walker.vx = 200;
+  let leftGround = false;
+  for (let i = 0; i < 120 && !leftGround; i++) {
+    leftGround = step(walker, tick, [platform], bounds, 30).leftGround;
+  }
+  check('walking off an edge starts a fall', leftGround && walker.mode === 'air',
+    `x=${walker.x.toFixed(0)} mode=${walker.mode}`);
+
+  // A hard throw must stay on screen and settle, not escape or orbit forever.
+  const thrown = createBody(500, platform.y);
+  thrown.mode = 'air';
+  thrown.vx = 1800;
+  thrown.vy = -900;
+  let escaped = false;
+  for (let i = 0; i < 1200 && thrown.mode !== 'ground'; i++) {
+    step(thrown, tick, [platform], bounds, 30);
+    if (thrown.x < 0 || thrown.x > bounds.width || thrown.y > bounds.height + 1) escaped = true;
+  }
+  check('a hard throw stays on screen and settles', !escaped && thrown.mode === 'ground',
+    `x=${thrown.x.toFixed(0)} y=${thrown.y.toFixed(0)} mode=${thrown.mode} escaped=${escaped}`);
+}
+
+// The window watcher feeds real title bars in as platforms.
+const winState = JSON.parse((await request('GET', '/state')).text).windows;
+if (winState) {
+  check('window watcher feeding platforms', winState.count > 0, `${winState.count} windows`);
+} else {
+  console.log('SKIP  window watcher  — disabled in config');
+}
+
 // Machine telemetry. Each source degrades independently, so report what is
 // present rather than failing the run on a machine without a battery or GPU.
 const tele = JSON.parse((await request('GET', '/state')).text);

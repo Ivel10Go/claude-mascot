@@ -14,12 +14,18 @@ contextBridge.exposeInMainWorld('mascot', {
   setInteractive: value => ipcRenderer.send('mascot:interactive', !!value),
 
   /** Reports what the rig is actually playing, for the dashboard and doctor. */
-  reportAnimation: (name, bodyFill) => ipcRenderer.send('mascot:animation', { name, bodyFill }),
+  reportAnimation: (name, bodyFill, place) =>
+    ipcRenderer.send('mascot:animation', { name, bodyFill, place }),
 
   /** Reports the line the mascot just spoke, so it can be asserted on. */
   reportBubble: (text, ruleId) => ipcRenderer.send('mascot:bubble', { text, ruleId }),
 
+  /** Cursor grabbed or released the mascot — the overlay must accept input. */
+  setDragging: value => ipcRenderer.send('mascot:dragging', !!value),
+
   onMetrics: fn => on('mascot:metrics', fn),
+  onPlatforms: fn => on('mascot:platforms', fn),
+  onRole: fn => on('mascot:role', fn),
   onReaction: fn => on('mascot:reaction', fn),
   onRelease: fn => on('mascot:release', fn),
   onConfig: fn => on('mascot:config', fn),

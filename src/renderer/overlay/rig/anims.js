@@ -435,6 +435,50 @@ export const anims = {
     },
   },
 
+  // Hauling itself up the side of a window. The rig is rotated 90° by the
+  // caller's facing flip, so this only has to sell the reaching motion.
+  climb: {
+    loop: true,
+    pose(t, m, p) {
+      const cycle = t / 620;
+      const reach = held(cycle);
+      p.tilt = -6 + reach * 3;
+      p.bodyDy = -Math.abs(reach) * 0.4;
+      // Arms alternate overhead, legs push against the glass below.
+      p.arms[0].angle = -74 + reach * 26;
+      p.arms[1].angle = -74 - reach * 26;
+      p.arms[0].len = 1.25;
+      p.arms[1].len = 1.25;
+      for (let i = 0; i < LEG_COUNT; i++) {
+        p.legs[i].angle = held(cycle + LEG_PHASE[i]) * 20 - 14;
+        p.legs[i].scaleY = 0.8;
+      }
+      p.eyes.open = 1.1;
+      p.eyes.dy = -0.6;
+    },
+  },
+
+  // A deliberate hop up onto something. Distinct from `fall`, which tumbles —
+  // a jump the mascot chose to make should look controlled.
+  leap: {
+    loop: true,
+    pose(t, m, p) {
+      const rise = clamp(t / 260, 0, 1);
+      p.tilt = -8 + rise * 4;
+      p.squashY = 1.12 - rise * 0.08;
+      p.squashX = 0.9 + rise * 0.06;
+      p.eyes.open = 1.15;
+      p.eyes.dy = -0.5;
+      p.arms[0].angle = -58;
+      p.arms[1].angle = -58;
+      // Legs tuck on the way up, then reach for the landing.
+      for (let i = 0; i < LEG_COUNT; i++) {
+        p.legs[i].scaleY = 0.55 + rise * 0.4;
+        p.legs[i].angle = LEG_LEAN[i] * 0.8;
+      }
+    },
+  },
+
   land: {
     dur: 360,
     pose(t, m, p) {
