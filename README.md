@@ -16,11 +16,9 @@ none of that code is portable — but the character geometry follows the same
 ## Status
 
 Working: the overlay, the rig and its 25 animations, the hook daemon, the
-Claude limit/cost readouts, and the speech-bubble engine.
+Claude limit/cost readouts, the speech-bubble engine, and machine telemetry.
 
-Not built yet: system telemetry (CPU/GPU/battery), window-edge physics, the
-dashboard, and packaging. The animations and modifiers for those exist and are
-driven by metrics that nothing is currently filling in.
+Not built yet: window-edge physics, the dashboard, and packaging.
 
 ## Requirements
 
@@ -61,6 +59,9 @@ npm run doctor
 | 5-hour and 7-day limits, context window, session cost | `rate_limits` / `context_window` / `cost` in the Claude Code statusLine payload — the only place the real percentages appear |
 | What Claude is doing right now | Claude Code hooks, POSTed to a loopback HTTP daemon on `127.0.0.1:4747` |
 | Token history and cost estimates | Tailing `~/.claude/projects/**/*.jsonl` |
+| CPU, memory, disk | `os.cpus()` deltas and `fs.statfs` — syscalls, no subprocess |
+| Battery | `wmic` once a minute for the percentage (~6× cheaper than PowerShell); charging state comes free from Electron's `powerMonitor` events |
+| GPU load and temperature | `nvidia-smi` every 15s, self-disabling if absent |
 
 The daemon binds to loopback only and requires a bearer token generated on first
 run, stored in `%APPDATA%/claude-mascot/` — never in this repo.
@@ -102,9 +103,12 @@ hand-authored timeline per state.
 
 ## Notes
 
-- Idle cost is roughly 1% of a 20-core machine (~20% of one core). The overlay is
-  a full-screen transparent layer capped at 24 fps; a per-pet window would be
-  cheaper and is the planned fix.
+- Idle cost is roughly 0.5% of a 20-core machine (~10% of one core), with all
+  telemetry running. The overlay is a full-screen transparent layer capped at
+  24 fps; a per-pet window would be cheaper and is the planned fix.
+- No native modules. `koffi` was evaluated for the Win32 battery and window
+  APIs and rejected: it ships no prebuilt binary, so it needs a install-time
+  build step that many npm setups block outright.
 - Everything is drawn from geometry at runtime, including the tray icon — there
   are no image assets in this repo.
 

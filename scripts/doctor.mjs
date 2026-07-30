@@ -241,6 +241,29 @@ if (probe) {
   await request('POST', '/hook', { hook_event_name: 'SessionStart', source: 'startup' });
 }
 
+// Machine telemetry. Each source degrades independently, so report what is
+// present rather than failing the run on a machine without a battery or GPU.
+const tele = JSON.parse((await request('GET', '/state')).text);
+check('cpu load read', typeof tele.cpu?.load === 'number' && tele.cpu.load >= 0 && tele.cpu.load <= 100,
+  `load=${tele.cpu?.load?.toFixed(1)}% cores=${tele.cpu?.cores}`);
+check('memory read', typeof tele.memory?.usedPercent === 'number',
+  `used=${tele.memory?.usedPercent?.toFixed(1)}%`);
+check('disks read', Array.isArray(tele.disks) && tele.disks.length > 0,
+  tele.disks?.map(d => `${d.mount} ${d.freePercent.toFixed(1)}% free`).join('  '));
+
+if (tele.battery?.percent != null) {
+  check('battery read', tele.battery.percent >= 0 && tele.battery.percent <= 100,
+    `${tele.battery.percent}% charging=${tele.battery.charging} via ${tele.battery.source}`);
+} else {
+  console.log(`SKIP  battery  — none detected (source=${tele.battery?.source})`);
+}
+if (tele.gpu) {
+  check('gpu read', typeof tele.gpu.load === 'number',
+    `${tele.gpu.name ?? '?'} ${tele.gpu.load}% ${tele.gpu.tempC}C ${tele.gpu.memUsedMb}/${tele.gpu.memTotalMb}MB`);
+} else {
+  console.log('SKIP  gpu  — nvidia-smi unavailable');
+}
+
 // The checks above deliberately drove the mascot into `alert` — a sticky,
 // critical, looping pose. Leaving it there would have it hopping on the user's
 // desktop long after the run. Clearing it is both cleanup and a test that the

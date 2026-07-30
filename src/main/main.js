@@ -8,6 +8,8 @@ const store = require('./state/store');
 const fromStatusLine = require('./state/from-statusline');
 const credentials = require('./daemon/credentials');
 const jsonlUsage = require('./collectors/jsonl-usage');
+const systemTelemetry = require('./collectors/system');
+const gpuTelemetry = require('./collectors/gpu');
 const { createDaemon } = require('./daemon/server');
 const { reactionFor, supersedes } = require('../shared/reactions');
 const { trayIcon } = require('./icon');
@@ -46,7 +48,7 @@ function release(reason) {
     holdTimer = null;
   }
   overlay.broadcast('mascot:release', { reason });
-  store.patch('intent', { animation: null, key: null, releasedBy: reason, at: Date.now() });
+  store.patchQuiet('intent', { animation: null, key: null, releasedBy: reason, at: Date.now() });
 }
 
 function dispatch(hook) {
@@ -73,7 +75,7 @@ function dispatch(hook) {
     key: reaction.key,
     data: reaction.data,
   });
-  store.patch('intent', { animation: reaction.animation, key: reaction.key, at: Date.now() });
+  store.patchQuiet('intent', { animation: reaction.animation, key: reaction.key, at: Date.now() });
 }
 
 async function startDaemon() {
@@ -163,14 +165,15 @@ app.whenReady().then(async () => {
 
   // What the rig is actually playing, reported back by the overlay. Confirms
   // a reaction reached the screen rather than just being dispatched.
+  // These flow out of the renderer for the dashboard and the doctor. Stored
+  // quietly: broadcasting them would bounce the whole state back to every
+  // overlay on every animation change.
   ipcMain.on('mascot:animation', (_event, { name, bodyFill }) => {
-    store.patch('playing', { animation: name, bodyFill, at: Date.now() });
+    store.patchQuiet('playing', { animation: name, bodyFill, at: Date.now() });
   });
 
-  // What the mascot actually said, for the dashboard's activity feed and so
-  // the doctor can assert a bubble reached the screen.
   ipcMain.on('mascot:bubble', (_event, { text, ruleId }) => {
-    store.patch('speech', { text, ruleId, at: Date.now() });
+    store.patchQuiet('speech', { text, ruleId, at: Date.now() });
   });
 
   // Metrics go to the renderers on change; the tray only cares about config.
@@ -187,6 +190,11 @@ app.whenReady().then(async () => {
   // Claude Code session is open. Failure here must not take the mascot down.
   jsonlUsage.start().catch(err => console.error('[jsonl-usage]', err.message));
 
+  // Machine telemetry. Each collector disables itself if its source is
+  // missing, so a desktop with no battery or no NVIDIA card just reports less.
+  systemTelemetry.start().catch(err => console.error('[system]', err.message));
+  gpuTelemetry.start();
+
   // Renderers subscribe on load; one broadcast once they're up is enough.
   setTimeout(() => {
     overlay.broadcast('mascot:config', config.get());
@@ -196,6 +204,8 @@ app.whenReady().then(async () => {
 
 app.on('before-quit', () => {
   jsonlUsage.stop();
+  systemTelemetry.stop();
+  gpuTelemetry.stop();
   if (staleTimer) clearInterval(staleTimer);
   if (daemon) daemon.close();
   config.flush();
