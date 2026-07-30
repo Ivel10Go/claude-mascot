@@ -1,7 +1,8 @@
 // Dashboard rendering. Reads the same store the mascot reacts to, so what the
 // numbers say here and what the mascot says out loud can never disagree.
 
-import { until, tokens, usd, bytes, pct } from '../../shared/format.js';
+import { until, ago, tokens, usd, bytes, pct } from '../../shared/format.js';
+import { REACTIONS, EFFECTS, ANIMATIONS, IDLE_ANIMATIONS, label } from '../../shared/catalog.js';
 
 const $ = id => document.getElementById(id);
 const clamp01 = v => Math.max(0, Math.min(1, v));
@@ -71,8 +72,75 @@ function renderLimits(s) {
 
   $('limits-note').textContent = live
     ? `Model: ${s.session?.model ?? '—'}${s.session?.agent ? ` · ${s.session.agent}` : ''}`
-    : 'No Claude Code session is rendering its status line, so these are unknown.';
+    : diagnose(s).short;
 }
+
+/**
+ * Why the limit gauges are empty, and what to do about it.
+ *
+ * The percentages exist in exactly one place: the payload Claude Code hands to
+ * its status line. Hooks are not a substitute — they fire in every Claude Code
+ * surface, but the status line is a terminal-UI feature, so a desktop-app
+ * session produces events and no limits at all. Saying "unknown" without
+ * saying which of those is happening is the least useful thing this panel
+ * could do.
+ */
+function diagnose(s) {
+  const sl = s.statusLine ?? {};
+  const t = DIAG[locale] ?? DIAG.de;
+  if (!sl.installed) return t.notInstalled;
+  if (!sl.everSeen) return t.neverRan;
+  if (!sl.sawRateLimits) return t.noLimits;
+  return t.stale;
+}
+
+const DIAG = {
+  de: {
+    notInstalled: {
+      short: 'Die Statuszeile ist nicht eingetragen — ohne sie gibt es keine Limits.',
+      long: 'Der Weiterleiter für die Statuszeile steht nicht in <code>~/.claude/settings.json</code>. ' +
+            'Einmal <code>npm run install-hooks</code> ausführen.',
+    },
+    neverRan: {
+      short: 'Die Statuszeile ist eingetragen, hat aber noch nie etwas geliefert.',
+      long: 'Die Statuszeile ist eingetragen, wurde aber noch nie ausgeführt. Sie ist ein ' +
+            'Terminal-Feature: die Claude-Code-<b>Desktop-App rendert keine</b>. Hooks kommen ' +
+            'trotzdem an — das Maskottchen reagiert also, kennt aber deine Limits nicht. ' +
+            'Starte <code>claude</code> einmal in einem Terminal, dann füllen sich die Anzeigen.',
+    },
+    noLimits: {
+      short: 'Die Statuszeile läuft, liefert aber keine Limit-Werte.',
+      long: 'Die Statuszeile läuft, aber ihr Payload enthält kein <code>rate_limits</code>. ' +
+            'Das passiert bei API-Key-Anmeldung und bei Tarifen ohne Fenster-Limits. ' +
+            'Tokens und Kosten unten stimmen weiterhin.',
+    },
+    stale: {
+      short: 'Gerade rendert keine Claude-Code-Sitzung ihre Statuszeile — Werte sind veraltet.',
+      long: '',
+    },
+  },
+  en: {
+    notInstalled: {
+      short: 'The status line is not registered, so there are no limits to show.',
+      long: 'The status-line forwarder is missing from <code>~/.claude/settings.json</code>. ' +
+            'Run <code>npm run install-hooks</code> once.',
+    },
+    neverRan: {
+      short: 'The status line is registered but has never delivered anything.',
+      long: 'The status line is registered but has never run. It is a terminal-UI feature: the ' +
+            'Claude Code <b>desktop app renders none</b>. Hooks still arrive, so the mascot ' +
+            'reacts — it just cannot know your limits. Run <code>claude</code> in a terminal ' +
+            'once and the gauges fill in.',
+    },
+    noLimits: {
+      short: 'The status line runs but carries no limit figures.',
+      long: 'The status line runs, but its payload has no <code>rate_limits</code>. That happens ' +
+            'with API-key auth and on plans without windowed limits. Tokens and cost below are ' +
+            'still accurate.',
+    },
+    stale: { short: 'No Claude Code session is rendering its status line, so these are stale.', long: '' },
+  },
+};
 
 function renderUsage(s) {
   const u = s.usage;
@@ -124,6 +192,10 @@ function renderFeed(s) {
   if (s.playing?.animation) parts.push(`animation <b>${s.playing.animation}</b>`);
   if (s.playing?.onPlatform) parts.push('standing on a window');
   if (s.windows?.count != null) parts.push(`${s.windows.count} windows tracked`);
+  // Proves the hook path is alive even while the limit gauges sit empty.
+  parts.push(s.lastHookAt
+    ? `last Claude Code event <b>${ago(s.lastHookAt, locale)}</b> ago`
+    : 'no Claude Code event yet');
   if (s.speech?.text) parts.push(`last said <b>“${s.speech.text}”</b>`);
   $('feed').innerHTML = parts.length ? parts.join('<br>') : 'idle';
 }
@@ -134,7 +206,7 @@ function headline(s) {
     $('headline').textContent =
       `${pct(100 - five.usedPercent)}% of the 5-hour limit left · resets in ${until(five.resetsAt, locale)}`;
   } else {
-    $('headline').textContent = 'No live Claude Code session — limits unknown.';
+    $('headline').textContent = diagnose(s).short;
   }
 }
 
@@ -175,14 +247,32 @@ window.dash.onState(s => {
   renderFeed(s);
   headline(s);
 
-  $('hooks-warning').innerHTML = s.hooksInstalled === false
-    ? `<div class="warnbox">Hooks are not installed, so the mascot can't see real
-       Claude Code activity or your real limits. Run <code>npm run install-hooks</code>.</div>`
-    : '';
+  $('hooks-warning').innerHTML = warnings(s);
 });
+
+/**
+ * Hooks and the status line are two separate installs with two separate
+ * failure modes, so they get two separate warnings. Lumping them together is
+ * what made a working install look broken: events were arriving the whole
+ * time, only the limits were missing.
+ */
+function warnings(s) {
+  const out = [];
+  if (s.hooksInstalled === false) {
+    out.push(locale === 'en'
+      ? `<div class="warnbox">Hooks are not installed, so the mascot cannot see what Claude Code
+         is doing. Run <code>npm run install-hooks</code>.</div>`
+      : `<div class="warnbox">Die Hooks sind nicht installiert — das Maskottchen sieht nicht, was
+         Claude Code tut. Einmal <code>npm run install-hooks</code> ausführen.</div>`);
+  }
+  const long = (s.limits && !s.limits.stale) ? '' : diagnose(s).long;
+  if (long) out.push(`<div class="warnbox info">${long}</div>`);
+  return out.join('');
+}
 
 window.dash.onConfig(cfg => {
   locale = cfg.locale === 'en' ? 'en' : 'de';
+  currentConfig = cfg;
   currentMode = cfg.displayMode ?? 'primary';
   if ($('s-display').options.length) $('s-display').value = currentMode;
   $('s-locale').value = locale;
@@ -190,6 +280,114 @@ window.dash.onConfig(cfg => {
   $('s-muted').checked = Boolean(cfg.muted);
   $('s-edges').checked = cfg.windowEdges !== false;
   $('s-autostart').checked = Boolean(cfg.autostart);
+  setSlider('scale', cfg.scale ?? 1);
+  setSlider('speed', cfg.speed ?? 1);
+  renderAnimSettings(cfg);
+});
+
+function setSlider(key, value) {
+  $(`s-${key}`).value = value;
+  $(`o-${key}`).textContent = `${Number(value).toFixed(1)}×`;
+}
+
+// ── Animation settings ───────────────────────────────────────────────────
+// Three sparse maps in the config, all with the same convention: a missing
+// key means enabled, so only the boxes you actually untick are ever stored.
+
+const UI = {
+  de: {
+    anims: 'Animationen', react: 'Worauf reagiert wird', idle: 'Kunststücke im Leerlauf',
+    effects: 'Live-Effekte', all: 'Alles an', none: 'Alles aus',
+    size: 'Größe', speed: 'Tempo',
+    note: 'Reaktionen kommen von Claude Code. Kunststücke führt das Maskottchen von sich aus vor. ' +
+          'Live-Effekte liegen über der laufenden Animation und werden von Messwerten gesteuert.',
+  },
+  en: {
+    anims: 'Animations', react: 'What it reacts to', idle: 'Idle flourishes',
+    effects: 'Live effects', all: 'All on', none: 'All off',
+    size: 'Size', speed: 'Speed',
+    note: 'Reactions come from Claude Code. Flourishes are what it does unprompted. ' +
+          'Live effects layer over whatever is playing and are driven by readings.',
+  },
+};
+
+const animLabel = name => {
+  const entry = ANIMATIONS.find(a => a.name === name);
+  return entry ? label(entry, locale) : name;
+};
+
+/** One checkbox list bound to a sparse config map. */
+function checkList(host, items, configKey, textOf, hintOf) {
+  host.innerHTML = '';
+  const boxes = [];
+  for (const item of items) {
+    const id = item.key ?? item.name;
+    const row = document.createElement('label');
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    const text = document.createElement('span');
+    const hint = document.createElement('em');
+    row.append(box, text, hint);
+    host.appendChild(row);
+    box.addEventListener('change', () => {
+      // Only the exceptions are stored; ticking a box removes the key again.
+      const map = { ...(currentConfig[configKey] || {}) };
+      if (box.checked) delete map[id];
+      else map[id] = false;
+      currentConfig = { ...currentConfig, [configKey]: map };
+      send({ [configKey]: map });
+    });
+    boxes.push({ id, box, text, hint, item });
+  }
+  return {
+    sync(cfg) {
+      const map = cfg[configKey] || {};
+      for (const b of boxes) {
+        b.box.checked = map[b.id] !== false;
+        b.text.textContent = textOf(b.item);
+        b.hint.textContent = hintOf ? hintOf(b.item) : '';
+      }
+    },
+    setAll(on) {
+      const map = {};
+      if (!on) for (const b of boxes) map[b.id] = false;
+      currentConfig = { ...currentConfig, [configKey]: map };
+      send({ [configKey]: map });
+      for (const b of boxes) b.box.checked = on;
+    },
+  };
+}
+
+let currentConfig = {};
+
+const lists = {
+  react: checkList($('c-react'), REACTIONS, 'reactions',
+    r => label(r, locale), r => animLabel(r.animation)),
+  idle: checkList($('c-idle'), IDLE_ANIMATIONS.map(name => ({ name })), 'idleAnims',
+    a => animLabel(a.name)),
+  effects: checkList($('c-effects'), EFFECTS, 'effects',
+    e => label(e, locale)),
+};
+
+function renderAnimSettings(cfg) {
+  const t = UI[locale] ?? UI.de;
+  $('l-anims').textContent = t.anims;
+  $('h-react').textContent = t.react;
+  $('h-idle').textContent = t.idle;
+  $('h-effects').textContent = t.effects;
+  $('b-all').textContent = t.all;
+  $('b-none').textContent = t.none;
+  $('l-anims-note').textContent = t.note;
+  $('l-scale').textContent = t.size;
+  $('l-speed').textContent = t.speed;
+  for (const list of Object.values(lists)) list.sync(cfg);
+}
+
+$('b-all').addEventListener('click', () => {
+  for (const list of Object.values(lists)) list.setAll(true);
+});
+$('b-none').addEventListener('click', () => {
+  for (const list of Object.values(lists)) list.setAll(false);
 });
 
 const send = patch => window.dash.setConfig(patch);
@@ -199,3 +397,12 @@ $('s-pets').addEventListener('change', e => send({ petCount: Math.max(1, Math.mi
 $('s-muted').addEventListener('change', e => send({ muted: e.target.checked }));
 $('s-edges').addEventListener('change', e => send({ windowEdges: e.target.checked }));
 $('s-autostart').addEventListener('change', e => send({ autostart: e.target.checked }));
+
+// Size rebuilds the mascots, so it is only committed when the slider is let
+// go; the readout still tracks the drag.
+for (const key of ['scale', 'speed']) {
+  $(`s-${key}`).addEventListener('input', e => {
+    $(`o-${key}`).textContent = `${Number(e.target.value).toFixed(1)}×`;
+  });
+  $(`s-${key}`).addEventListener('change', e => send({ [key]: Number(e.target.value) }));
+}

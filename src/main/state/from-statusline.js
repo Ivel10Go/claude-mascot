@@ -13,6 +13,16 @@ const STALE_AFTER_MS = 90_000;
 
 let lastSeen = 0;
 
+// Whether a *real* Claude Code session has ever rendered its status line into
+// this daemon, and whether those payloads actually carried rate limits.
+//
+// Worth tracking separately from `stale`, because the three failure modes need
+// three different answers: nothing ever arrived (the status line isn't running
+// — most likely you are in the desktop app, which renders none), something
+// arrived but had no `rate_limits` (wrong plan or API-key auth), or it arrived
+// and then stopped (no session open right now).
+const health = { everSeen: false, lastSeenAt: null, sawRateLimits: false };
+
 const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 
 function window_(raw) {
@@ -28,6 +38,16 @@ function window_(raw) {
 
 function apply(payload) {
   lastSeen = Date.now();
+
+  // `npm run doctor` posts a synthetic payload to prove the path works. It
+  // must not be able to make the app claim a real session was ever seen —
+  // that is precisely the diagnosis it exists to check.
+  if (payload._probe !== true) {
+    health.everSeen = true;
+    health.lastSeenAt = lastSeen;
+    if (payload.rate_limits?.five_hour) health.sawRateLimits = true;
+    store.patchQuiet('statusLine', { ...health });
+  }
 
   const limits = {
     fiveHour: window_(payload.rate_limits?.five_hour),
@@ -78,4 +98,9 @@ function checkStale() {
   if (limits.stale !== stale) store.patch('limits', { ...limits, stale });
 }
 
-module.exports = { apply, checkStale, STALE_AFTER_MS };
+/** What the app can honestly say about where its Claude numbers come from. */
+function statusLineHealth() {
+  return { ...health };
+}
+
+module.exports = { apply, checkStale, statusLineHealth, STALE_AFTER_MS };

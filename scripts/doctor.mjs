@@ -98,7 +98,13 @@ const check = (name, ok, detail = '') => {
 };
 
 // A payload shaped exactly like the documented statusLine JSON.
+//
+// `_probe` marks it as ours. Without it the app would record that a real
+// Claude Code session had rendered its status line — which is exactly the fact
+// the "why are my limits empty" diagnosis turns on, so a self-test that fakes
+// it would make the app lie about its own wiring.
 const statusPayload = {
+  _probe: true,
   session_id: 'doctor-probe',
   cwd: process.cwd(),
   version: '2.1.220',
@@ -338,6 +344,153 @@ if (tele.gpu) {
     `${tele.gpu.name ?? '?'} ${tele.gpu.load}% ${tele.gpu.tempC}C ${tele.gpu.memUsedMb}/${tele.gpu.memTotalMb}MB`);
 } else {
   console.log('SKIP  gpu  — nvidia-smi unavailable');
+}
+
+// The props — headband, flag, confetti — are new geometry, not just new pose
+// numbers. `playing` alone would look healthy with a prop group that never
+// leaves display:none, so this asserts what actually reached the rig.
+{
+  /**
+   * Watches for a prop to appear rather than sampling once after a delay.
+   *
+   * Some of these are transients — confetti is a 2.4 s one-shot that arrives
+   * whenever the speech engine's global gap lets it through — so a single
+   * check at a guessed moment tests the guess, not the prop.
+   */
+  const watchFor = async (want, timeoutMs) => {
+    const deadline = Date.now() + timeoutMs;
+    let last = null;
+    while (Date.now() < deadline) {
+      last = JSON.parse((await request('GET', '/state')).text).playing;
+      if ((last?.props ?? '').split(',').includes(want)) {
+        check(`${want} prop reaches the rig`, true, `playing=${last.animation}`);
+        return true;
+      }
+      await wait(250);
+    }
+    check(`${want} prop reaches the rig`, false,
+      `never seen in ${timeoutMs} ms; last playing=${last?.animation} props=${JSON.stringify(last?.props)}`);
+    return false;
+  };
+
+  // A prompt ties the headband on; the tie takes ~850 ms to finish.
+  await request('POST', '/hook', { hook_event_name: 'UserPromptSubmit' });
+  await watchFor('headband', 4000);
+  // Finishing a turn plants the flag.
+  await request('POST', '/hook', { hook_event_name: 'Stop' });
+  await watchFor('flag', 4000);
+  // Compaction floats and sparkles.
+  await request('POST', '/hook', { hook_event_name: 'PreCompact', trigger: 'auto' });
+  await watchFor('sparkle', 5000);
+
+}
+
+// Confetti has no hook of its own — it is the payoff for the 5-hour window
+// rolling over, which reaches the rig through the speech engine and so has to
+// win a global gap and a priority sort against whatever else is happening. It
+// is therefore checked offline instead, by driving the real rig through a
+// throwaway DOM: turning a prop on has to add drawn geometry, not just set a
+// number nobody renders.
+{
+  const { installDom, countDrawn } = await import('./lib/svg-dom.mjs');
+  installDom();
+  const { createMark, neutralPose } = await import('../src/renderer/overlay/rig/mark.js');
+  const { anims } = await import('../src/renderer/overlay/rig/anims.js');
+
+  const rig = createMark(100);
+  const p = neutralPose();
+  rig.apply(p);
+  const bare = countDrawn(rig.svg);
+
+  // Each prop, sampled where its own animation has it fully in play.
+  const cases = [['headband', 1600], ['victory', 1200], ['confetti', 900], ['meditate', 2000]];
+  const grew = [];
+  for (const [name, t] of cases) {
+    neutralPose(p);
+    anims[name].pose(t, {}, p);
+    rig.apply(p);
+    grew.push(`${name}:+${countDrawn(rig.svg) - bare}`);
+  }
+  const counts = grew.map(s => Number(s.split('+')[1]));
+  check('props draw real geometry', counts.every(n => n > 0),
+    `neutral=${bare} shapes; ${grew.join(' ')}`);
+
+  // The burst is 16 separate pieces. One rect that happens to appear would
+  // satisfy the check above while looking nothing like confetti.
+  neutralPose(p);
+  anims.confetti.pose(900, {}, p);
+  rig.apply(p);
+  check('the confetti burst is a burst', countDrawn(rig.svg) - bare >= 16,
+    `${countDrawn(rig.svg) - bare} extra shapes at t=900ms`);
+}
+
+// The catalogue is what the settings UI and the preview gallery are built
+// from. An animation missing from it can never be switched off and never gets
+// a picture, and a reaction key that drifted from reactions.js produces a
+// checkbox that silently controls nothing — both fail quietly, so they are
+// checked loudly here.
+{
+  const catalog = await import('../src/shared/catalog.js');
+  const { anims, modifierNames } = await import('../src/renderer/overlay/rig/anims.js');
+  const reactionsMod = await import('../src/shared/reactions.js');
+  const { reactionFor } = reactionsMod.default ?? reactionsMod;
+
+  const implemented = new Set(Object.keys(anims));
+  const listed = new Set(catalog.animationNames);
+  const missing = [...implemented].filter(n => !listed.has(n));
+  const phantom = [...listed].filter(n => !implemented.has(n));
+  check('every animation is in the catalogue', missing.length === 0 && phantom.length === 0,
+    `${implemented.size} animations; unlisted=[${missing}] unimplemented=[${phantom}]`);
+
+  const badAnim = catalog.REACTIONS.filter(r => !implemented.has(r.animation));
+  check('every reaction names a real animation', badAnim.length === 0,
+    badAnim.map(r => `${r.key}->${r.animation}`).join(', ') || `${catalog.REACTIONS.length} reactions`);
+
+  const badEffect = catalog.EFFECTS.filter(e => !modifierNames.includes(e.name));
+  check('every effect names a real modifier', badEffect.length === 0,
+    badEffect.map(e => e.name).join(', ') || modifierNames.join(', '));
+
+  // The keys the settings switch on have to be the keys the dispatcher emits.
+  const events = [
+    ['SessionStart', {}], ['UserPromptSubmit', {}],
+    ['PreToolUse', { tool_name: 'Bash' }], ['PreToolUse', { tool_name: 'Edit' }],
+    ['PreToolUse', { tool_name: 'Read' }], ['PreToolUse', { tool_name: 'WebFetch' }],
+    ['PreToolUse', { tool_name: 'Task' }], ['SubagentStart', {}],
+    ['Notification', { notification_type: 'permission_prompt' }], ['Notification', {}],
+    ['PostToolUseFailure', {}], ['PreCompact', {}], ['Stop', {}],
+    ['StopFailure', { error_type: 'rate_limit' }], ['StopFailure', {}], ['SessionEnd', {}],
+  ];
+  const emitted = new Map();
+  for (const [name, extra] of events) {
+    const r = reactionFor({ hook_event_name: name, ...extra });
+    if (r) emitted.set(r.key, r.animation);
+  }
+  const catalogued = new Map(catalog.REACTIONS.map(r => [r.key, r.animation]));
+  const drift = [...emitted].filter(([key, anim]) => catalogued.get(key) !== anim)
+    .map(([key, anim]) => `${key}: dispatcher=${anim} catalogue=${catalogued.get(key) ?? '—'}`);
+  const unlistedKeys = [...emitted.keys()].filter(k => !catalogued.has(k));
+  check('settings keys match what the dispatcher emits',
+    drift.length === 0 && unlistedKeys.length === 0,
+    drift.join(' · ') || `${emitted.size} keys agree`);
+}
+
+// Where the Claude numbers come from. Empty gauges have three different
+// causes and three different fixes, so the app has to be able to tell them
+// apart — reporting "unknown" for all three is what made a working install
+// look broken while events were arriving the whole time.
+{
+  const s = JSON.parse((await request('GET', '/state')).text);
+  const sl = s.statusLine ?? {};
+  check('hook path alive', typeof s.lastHookAt === 'number', `lastHookAt=${s.lastHookAt}`);
+  check('statusLine registered with Claude Code', sl.installed === true, `installed=${sl.installed}`);
+  if (!sl.everSeen) {
+    console.log('SKIP  statusLine delivering limits  — registered but never run. ' +
+      'It is a terminal feature; the Claude Code desktop app renders none. ' +
+      'Run `claude` in a terminal once.');
+  } else {
+    check('statusLine carries rate limits', sl.sawRateLimits === true,
+      `everSeen=${sl.everSeen} sawRateLimits=${sl.sawRateLimits}`);
+  }
 }
 
 // The checks above deliberately drove the mascot into `alert` — a sticky,

@@ -215,40 +215,6 @@ export const anims = {
     },
   },
 
-  // The 5-hour limit actually ran out (StopFailure / rate_limit). It flops
-  // flat and stays there — this is the one state that should look defeated.
-  limitHit: {
-    loop: true,
-    pose(t, m, p) {
-      const settle = clamp(t / 700, 0, 1);
-      const drop = easeOut(settle);
-      p.squashY = 1 - drop * 0.45;
-      p.squashX = 1 + drop * 0.3;
-      p.tilt = drop * 9 + Math.sin(t / 1500) * 1.2;
-      p.eyes.open = 1 - drop * 0.88;
-      p.eyes.dy = drop * 0.5;
-      p.arms[0].angle = drop * 74;
-      p.arms[1].angle = drop * 74;
-      p.body.sat = 62 - drop * 34;
-      p.body.light = 59 - drop * 12;
-      for (let i = 0; i < LEG_COUNT; i++) p.legs[i].scaleY = 1 - drop * 0.6;
-    },
-  },
-
-  // A subagent was spawned: it splits briefly, then snaps back together.
-  clone: {
-    dur: 900,
-    pose(t, m, p) {
-      const k = envelope(t, 900, 200);
-      p.squashX = 1 + k * 0.35;
-      p.squashY = 1 - k * 0.12;
-      p.eyes.dx = Math.sin((t / 220) * TAU) * 0.7 * k;
-      p.arms[0].angle = -24 * k;
-      p.arms[1].angle = -24 * k;
-      p.fx.glow = k * 0.3;
-    },
-  },
-
   // The 5-hour limit actually ran out. Deliberately the bleakest pose in the
   // set: it drops, splays, and stops looking at you.
   limitHit: {
@@ -306,6 +272,322 @@ export const anims = {
       p.arms[1].angle = -25 * k;
       for (const i of LEFT_PAIR) p.legs[i].angle = 34 * k;
       for (const i of RIGHT_PAIR) p.legs[i].angle = -22 * k;
+    },
+  },
+
+  // ── Props ────────────────────────────────────────────────────────────
+  // The three that carry a physical object. Each drives `p.props`, which the
+  // rig turns into geometry; at amount 0 the whole prop group is display:none,
+  // so a mascot that never celebrates costs nothing for the confetti.
+
+  // Plants a flag and holds it up. The pole swings out from behind the
+  // shoulder rather than fading in, so it reads as being produced, not spawned.
+  victory: {
+    dur: 3400,
+    pose(t, m, p) {
+      const raise = easeOut(clamp(t / 700, 0, 1));
+      const out = clamp((3400 - t) / 500, 0, 1);
+      const k = raise * out;
+
+      p.props.flag = k;
+      p.props.flagWave = Math.sin((t / 250) * TAU);
+      p.props.flagLean = 8 + Math.sin((t / 950) * TAU) * 7;
+
+      p.arms[1].angle = -78 * k;
+      p.arms[1].len = 1 + 0.35 * k;
+      p.arms[0].angle = -18 * k + Math.sin((t / 520) * TAU) * 11 * k;
+
+      // Proud little hops, but only once the flag is actually up.
+      const bob = t > 700 ? hop((t - 700) / 780) * out : 0;
+      p.bodyDy = -bob * 1.7;
+      p.squashY = 1 + bob * 0.05;
+      p.squashX = 1 - bob * 0.04;
+      p.tilt = -4 * k + Math.sin((t / 950) * TAU) * 2;
+      p.eyes.squint = 0.4 * k;
+      p.fx.glow = 0.25 * k;
+      for (let i = 0; i < LEG_COUNT; i++) p.legs[i].scaleY = 1 - bob * 0.22;
+    },
+  },
+
+  // Throws confetti at the top of a jump. The burst is ballistic and fades
+  // out before the animation ends, so blending back to idle never runs the
+  // particles backwards into the body.
+  confetti: {
+    dur: 2400,
+    pose(t, m, p) {
+      const squat = Math.max(0, 1 - t / 240);
+      // One jump, not a loop: `hop` wraps, so without the upper bound it would
+      // keep bouncing for a second after the confetti has already landed.
+      const air = t < 240 || t > 1140 ? 0 : hop((t - 240) / 900);
+      const burst = clamp((t - 300) / 1600, 0, 1);
+
+      p.props.confetti = easeOut(burst);
+      p.props.confettiAmt = burst > 0 ? clamp((1 - burst) * 3, 0, 1) : 0;
+
+      p.bodyDy = -air * 3.6;
+      p.squashY = 1 - squat * 0.28 + air * 0.08;
+      p.squashX = 1 + squat * 0.22 - air * 0.06;
+      p.arms[0].angle = 24 * squat - 84 * air;
+      p.arms[1].angle = 24 * squat - 84 * air;
+      p.arms[0].len = 1 + air * 0.3;
+      p.arms[1].len = 1 + air * 0.3;
+      p.eyes.open = 1 + air * 0.3;
+      p.eyes.squint = 0.35 * air;
+      p.fx.glow = air * 0.4;
+      for (let i = 0; i < LEG_COUNT; i++) p.legs[i].scaleY = 1 - air * 0.35;
+    },
+  },
+
+  // Ties a headband on and settles into a working stance. A loop, because
+  // this is a state — it holds from "you asked for something" until the first
+  // tool actually runs.
+  headband: {
+    loop: true,
+    pose(t, m, p) {
+      const tie = easeOut(clamp(t / 850, 0, 1));
+      // Hands come up to tie it, then drop away; `work` is what's left after.
+      const hands = Math.sin(clamp(t / 850, 0, 1) * Math.PI);
+      const work = tie * (1 - hands);
+
+      p.props.headband = tie;
+      p.props.bandWave = Math.sin((t / 620) * TAU);
+
+      p.arms[0].angle = -58 * hands + 14 * work;
+      p.arms[1].angle = -58 * hands + 14 * work;
+      p.arms[0].len = 1 + hands * 0.3;
+      p.arms[1].len = 1 + hands * 0.3;
+
+      p.bodyDy = sin(t, 1100) * -0.4 * work - hands * 0.5;
+      p.tilt = 3 * work;
+      p.squashY = 1 - 0.03 * work;
+      p.squashX = 1 + 0.03 * work;
+      p.eyes.squint = 0.4 * work;
+      p.eyes.dy = 0.25 * work;
+    },
+  },
+
+  // Compaction is about to happen: it floats, closes its eyes, and sparkles.
+  meditate: {
+    loop: true,
+    pose(t, m, p) {
+      const breathe = sin(t, 4200);
+      const rise = easeOut(clamp(t / 1400, 0, 1));
+
+      p.props.sparkle = rise * (0.55 + 0.45 * ((Math.sin((t / 2600) * TAU) + 1) / 2));
+      p.props.sparkleWave = Math.sin((t / 3000) * TAU);
+
+      p.bodyDy = -rise * 3.2 + breathe * -0.5;
+      p.squashY = 1 + breathe * 0.03;
+      p.squashX = 1 - breathe * 0.02;
+      p.eyes.open = 0.08;
+      p.arms[0].angle = 30 + breathe * 4;
+      p.arms[1].angle = 30 - breathe * 4;
+      p.fx.glow = rise * 0.28;
+      // Legs tuck as it leaves the ground.
+      for (let i = 0; i < LEG_COUNT; i++) {
+        p.legs[i].scaleY = 1 - rise * 0.55;
+        p.legs[i].angle = (i < 2 ? -1 : 1) * rise * 18;
+      }
+    },
+  },
+
+  // ── Flourishes ───────────────────────────────────────────────────────
+  // Nothing here is triggered by Claude Code. They exist so that watching the
+  // mascot do nothing in particular stays worth watching.
+
+  backflip: {
+    dur: 1250,
+    pose(t, m, p) {
+      const squat = Math.max(0, 1 - t / 170);
+      const flight = clamp((t - 170) / 850, 0, 1);
+      const air = Math.sin(flight * Math.PI);
+      const landing = Math.sin(clamp((t - 1020) / 230, 0, 1) * Math.PI);
+
+      p.bodyDy = -air * 7.5;
+      p.tilt = -360 * easeInOut(flight);
+      p.squashY = 1 - squat * 0.32 + air * 0.06 - landing * 0.25;
+      p.squashX = 1 + squat * 0.24 - air * 0.05 + landing * 0.2;
+      p.arms[0].angle = 30 * squat - 50 * air;
+      p.arms[1].angle = 30 * squat - 50 * air;
+      p.eyes.open = 1 + air * 0.35;
+      for (let i = 0; i < LEG_COUNT; i++) p.legs[i].scaleY = 1 - air * 0.55 - squat * 0.2;
+    },
+  },
+
+  dance: {
+    loop: true,
+    pose(t, m, p) {
+      const beat = t / 480;
+      const bounce = hop(beat * 2);
+      const sway = held(beat, 0.25);
+
+      p.bodyDy = -bounce * 1.3;
+      p.squashY = 1 + bounce * 0.06;
+      p.squashX = 1 - bounce * 0.05;
+      p.tilt = sway * 9;
+      // Arms alternate overhead — the two-step reads from the arms, not the feet.
+      p.arms[0].angle = -70 + sway * 45;
+      p.arms[1].angle = -70 - sway * 45;
+      p.arms[0].len = 1.2;
+      p.arms[1].len = 1.2;
+      p.eyes.squint = 0.45;
+      for (let i = 0; i < LEG_COUNT; i++) {
+        p.legs[i].angle = held(beat + LEG_PHASE[i], 0.25) * 22;
+        p.legs[i].scaleY = 1 - bounce * 0.15;
+      }
+    },
+  },
+
+  // A turn on the spot. squashX is driven straight off a cosine, so it passes
+  // through zero and out the other side — the rig genuinely flips rather than
+  // pretending to rotate.
+  spin: {
+    dur: 900,
+    pose(t, m, p) {
+      const k = easeInOut(clamp(t / 900, 0, 1));
+      const theta = k * TAU;
+      p.squashX = Math.cos(theta);
+      p.squashY = 1 + Math.abs(Math.sin(theta)) * 0.06;
+      p.bodyDy = -Math.sin(k * Math.PI) * 1.2;
+      p.tilt = Math.sin(theta) * 5;
+      p.arms[0].angle = -40 * Math.sin(k * Math.PI);
+      p.arms[1].angle = -40 * Math.sin(k * Math.PI);
+      p.eyes.squint = 0.3;
+    },
+  },
+
+  stretch: {
+    dur: 2000,
+    pose(t, m, p) {
+      const k = Math.sin(clamp(t / 2000, 0, 1) * Math.PI);
+      p.squashY = 1 + k * 0.22;
+      p.squashX = 1 - k * 0.12;
+      p.bodyDy = -k * 1.4;
+      p.tilt = -k * 5;
+      p.arms[0].angle = -100 * k;
+      p.arms[1].angle = -100 * k;
+      p.arms[0].len = 1 + k * 0.6;
+      p.arms[1].len = 1 + k * 0.6;
+      p.eyes.open = 1 - k * 0.8;
+      p.eyes.squint = k * 0.5;
+      for (let i = 0; i < LEG_COUNT; i++) p.legs[i].scaleY = 1 + k * 0.25;
+    },
+  },
+
+  facepalm: {
+    dur: 1600,
+    pose(t, m, p) {
+      const k = envelope(t, 1600, 260);
+      const slap = easeOut(clamp(t / 320, 0, 1));
+      p.arms[1].angle = -118 * slap * k;
+      p.arms[1].len = 1 + 0.5 * slap * k;
+      p.arms[1].dy = -1.2 * slap * k;
+      p.arms[0].angle = 22 * k;
+      p.bodyDy = 0.5 * k;
+      p.squashY = 1 - k * 0.07;
+      p.squashX = 1 + k * 0.05;
+      p.eyes.open = 1 - k * 0.85;
+      p.eyes.dy = 0.3 * k;
+      // A slow, resigned shake on top of the lean.
+      p.tilt = 9 * k + Math.sin((t / 520) * TAU) * 3 * k;
+    },
+  },
+
+  shrug: {
+    dur: 1300,
+    pose(t, m, p) {
+      const k = Math.sin(clamp(t / 1300, 0, 1) * Math.PI);
+      for (let i = 0; i < 2; i++) {
+        p.arms[i].angle = -34 * k;
+        p.arms[i].len = 1 + k * 0.35;
+        p.arms[i].dy = -0.9 * k;
+      }
+      p.bodyDy = -0.7 * k;
+      p.squashY = 1 - k * 0.06;
+      p.squashX = 1 + k * 0.05;
+      p.tilt = Math.sin((t / 1300) * TAU) * 4;
+      p.eyes.dy = -0.3 * k;
+      p.eyes.squint = 0.25 * k;
+    },
+  },
+
+  // No separate head to nod, so the nod is the whole body rocking with the
+  // eyes riding along — which is how the reference rig sells it too.
+  nod: {
+    dur: 1000,
+    pose(t, m, p) {
+      const k = envelope(t, 1000, 160);
+      const beat = Math.sin((t / 330) * TAU);
+      p.tilt = beat * 7 * k;
+      p.bodyDy = Math.abs(beat) * 0.4 * k;
+      p.squashY = 1 - Math.abs(beat) * 0.05 * k;
+      p.eyes.dy = beat * 0.35 * k;
+      p.arms[0].angle = 10 * k;
+      p.arms[1].angle = 10 * k;
+    },
+  },
+
+  salute: {
+    dur: 1500,
+    pose(t, m, p) {
+      const k = easeOut(clamp(t / 280, 0, 1)) * clamp((1500 - t) / 300, 0, 1);
+      p.arms[1].angle = -128 * k;
+      p.arms[1].len = 1 + 0.45 * k;
+      p.arms[1].dy = -0.8 * k;
+      p.arms[0].angle = 16 * k;
+      p.tilt = -3 * k;
+      p.squashY = 1 + 0.05 * k;
+      p.bodyDy = -0.4 * k;
+      p.eyes.open = 1.1;
+      p.eyes.squint = 0.2 * k;
+      for (let i = 0; i < LEG_COUNT; i++) p.legs[i].angle = LEG_LEAN[i] * 0.15 * k;
+    },
+  },
+
+  bow: {
+    dur: 1600,
+    pose(t, m, p) {
+      const k = Math.sin(clamp(t / 1600, 0, 1) * Math.PI);
+      p.tilt = 34 * k;
+      p.bodyDy = 0.6 * k;
+      p.squashY = 1 - k * 0.1;
+      p.arms[0].angle = 46 * k;
+      p.arms[1].angle = -30 * k;
+      p.arms[1].len = 1 + k * 0.4;
+      p.eyes.open = 1 - k * 0.6;
+      p.eyes.dy = 0.4 * k;
+      for (let i = 0; i < LEG_COUNT; i++) p.legs[i].angle = -k * 10;
+    },
+  },
+
+  peek: {
+    dur: 2200,
+    pose(t, m, p) {
+      const k = envelope(t, 2200, 380);
+      const lean = Math.sin((t / 2200) * TAU);
+      p.tilt = lean * 14 * k;
+      p.squashX = 1 - Math.abs(lean) * 0.08 * k;
+      p.eyes.dx = lean * 1.3 * k;
+      p.eyes.open = 1 + 0.25 * k;
+      p.bodyDy = -0.4 * k;
+      p.arms[0].angle = 26 * k;
+      p.arms[1].angle = 26 * k;
+      for (let i = 0; i < LEG_COUNT; i++) p.legs[i].angle = lean * 8 * k;
+    },
+  },
+
+  roll: {
+    dur: 1400,
+    pose(t, m, p) {
+      const k = clamp(t / 1400, 0, 1);
+      p.tilt = easeInOut(k) * 360;
+      p.squashY = 0.86;
+      p.squashX = 1.14;
+      p.bodyDy = -Math.sin(k * Math.PI) * 0.8;
+      p.eyes.open = 0.5;
+      p.arms[0].angle = 60;
+      p.arms[1].angle = 60;
+      for (let i = 0; i < LEG_COUNT; i++) p.legs[i].scaleY = 0.4;
     },
   },
 
@@ -584,8 +866,20 @@ export const modifiers = [
   },
 ];
 
-/** Applies every modifier in order. Cheap enough to run each frame. */
-export function applyModifiers(pose, metrics, now) {
-  for (const mod of modifiers) mod(pose, metrics, now);
+/**
+ * Applies the enabled modifiers in order. Cheap enough to run each frame.
+ *
+ * `enabled` is the config's effects map, where a missing key means on — new
+ * effects should light up for existing users rather than staying dark until
+ * someone finds the setting.
+ */
+export function applyModifiers(pose, metrics, now, enabled = null) {
+  for (const mod of modifiers) {
+    if (enabled && enabled[mod.name] === false) continue;
+    mod(pose, metrics, now);
+  }
   return pose;
 }
+
+/** Modifier names, for the settings UI and for the doctor to cross-check. */
+export const modifierNames = modifiers.map(m => m.name);

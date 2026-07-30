@@ -26,7 +26,7 @@ const FRAME_MS = 1000 / TARGET_FPS;
 let bounds = { width: window.innerWidth, height: window.innerHeight };
 let metrics = {};
 let interactive = false;
-let reported = { animation: null, fill: null, footY: null };
+let reported = { animation: null, fill: null, footY: null, props: '' };
 let last = performance.now();
 let nextFrameDue = 0;
 
@@ -35,17 +35,38 @@ let platforms = [];
 let isPrimary = false;
 window.mascot.onRole(({ primary }) => { isPrimary = !!primary; });
 
+const getConfig = () => config;
+
+function removePet(pet) {
+  if (pet === grabbed) { grabbed = null; window.mascot.setDragging(false); }
+  pet.node.remove();
+}
+
 function setPetCount(n) {
   while (pets.length < n) {
-    const pet = createPet(layer, bounds);
+    const pet = createPet(layer, bounds, getConfig);
     pet.setPlatforms(platforms);
     pets.push(pet);
   }
-  while (pets.length > n) {
-    const pet = pets.pop();
-    if (pet === grabbed) { grabbed = null; window.mascot.setDragging(false); }
-    pet.node.remove();
-  }
+  while (pets.length > n) removePet(pets.pop());
+}
+
+/**
+ * Size is baked into the SVG at construction rather than applied as a CSS
+ * transform, because every layout number the pet uses — foot offset, hit box,
+ * how close to a wall counts as touching it — is derived from its width. So a
+ * size change means new pets.
+ */
+// Seeded with 1, not null: the first pet is created before any config
+// arrives, so it is always built at 1× and a saved size has to rebuild it.
+let builtScale = 1;
+function applyScale() {
+  const scale = Math.max(0.4, Math.min(3, Number(config.scale) || 1));
+  if (scale === builtScale) return;
+  builtScale = scale;
+  const n = pets.length;
+  while (pets.length) removePet(pets.pop());
+  setPetCount(n);
 }
 
 function onResize() {
@@ -136,10 +157,15 @@ function frame(now) {
   // Rounded to 4px: enough to tell a title bar from the floor, coarse enough
   // that a walk cycle's bob doesn't emit a message every frame.
   const footY = pet ? Math.round(pet.y / 4) * 4 : null;
-  if (playing && (playing !== reported.animation || fill !== reported.fill || footY !== reported.footY)) {
-    reported = { animation: playing, fill, footY };
+  // Which props reached the geometry, not just which animation was requested.
+  const props = pet ? pet.propsOn : '';
+  if (playing && (playing !== reported.animation || fill !== reported.fill
+                  || footY !== reported.footY || props !== reported.props)) {
+    reported = { animation: playing, fill, footY, props };
     window.mascot.reportAnimation(playing, fill, {
       footY,
+      props,
+      width: Math.round(pet.width),
       petX: Math.round(pet.x),
       onPlatform: pet ? pet.y < bounds.height - 2 : false,
       platformCount: platforms.length,
@@ -178,6 +204,7 @@ window.mascot.onPlatforms(next => {
 window.mascot.onConfig(cfg => {
   config = cfg || {};
   setPetCount(Math.max(1, config.petCount ?? 1));
+  applyScale();
 });
 
 setPetCount(1);

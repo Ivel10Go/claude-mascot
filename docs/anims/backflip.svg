@@ -1,0 +1,257 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-11 -13 46 37" width="190" height="153" role="img" aria-label="backflip animation">
+  <title>backflip</title>
+  <defs>
+    <radialGradient id="mk0-glow">
+      <stop offset="0%" stop-color="#ffcf9a" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ffcf9a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+    <style>
+      .abackflip { animation: abackflipf 1705ms linear infinite; }
+      @keyframes abackflipf {
+        0%, 6.66% { opacity: 1; }
+        6.67%, 100% { opacity: 0; }
+      }
+      @media (prefers-reduced-motion: reduce) { .abackflip { animation: none; } }
+    </style>
+    <g class="abackflip" opacity="1" style="animation-delay:0ms">
+        <ellipse cx="12" cy="20" rx="11.16" ry="0.9" fill="#000" opacity="0.22"/>
+        <g transform="translate(0 0)">
+          <g transform="translate(12 20) rotate(0) scale(1.24 0.68) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 0.8) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 0.8) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 0.8) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 0.8) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(-30 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(30 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+            <rect x="16.51" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-114ms">
+        <ellipse cx="12" cy="20" rx="9.716" ry="0.9" fill="#000" opacity="0.22"/>
+        <g transform="translate(0 0)">
+          <g transform="translate(12 20) rotate(0) scale(1.08 0.894) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 0.934) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 0.934) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 0.934) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 0.934) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(-9.947 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(9.947 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+            <rect x="16.51" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-227ms">
+        <ellipse cx="12" cy="20" rx="7.678" ry="0.9" fill="#000" opacity="0.177"/>
+        <g transform="translate(0 -1.576)">
+          <g transform="translate(12 20) rotate(-0.441) scale(0.989 1.013) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 0.884) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 0.884) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 0.884) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 0.884) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(10.505 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(-10.505 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="7.995" width="1.49" height="3.06" fill="#241611"/>
+            <rect x="16.51" y="7.995" width="1.49" height="3.06" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-341ms">
+        <ellipse cx="12" cy="20" rx="5.35" ry="0.9" fill="#000" opacity="0.098"/>
+        <g transform="translate(0 -4.429)">
+          <g transform="translate(12 20) rotate(-11.706) scale(0.97 1.035) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 0.675) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 0.675) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 0.675) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 0.675) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(29.525 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(-29.525 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="7.805" width="1.49" height="3.439" fill="#241611"/>
+            <rect x="16.51" y="7.805" width="1.49" height="3.439" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-455ms">
+        <ellipse cx="12" cy="20" rx="3.704" ry="0.9" fill="#000" opacity="0.041"/>
+        <g transform="translate(0 -6.512)">
+          <g transform="translate(12 20) rotate(-54.021) scale(0.957 1.052) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 0.522) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 0.522) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 0.522) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 0.522) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(43.413 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(-43.413 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="7.667" width="1.49" height="3.716" fill="#241611"/>
+            <rect x="16.51" y="7.667" width="1.49" height="3.716" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-568ms">
+        <ellipse cx="12" cy="20" rx="2.967" ry="0.9" fill="#000" opacity="0.015"/>
+        <g transform="translate(0 -7.463)">
+          <g transform="translate(12 20) rotate(-148.03) scale(0.95 1.06) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 0.453) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 0.453) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 0.453) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 0.453) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(49.755 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(-49.755 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="7.604" width="1.49" height="3.843" fill="#241611"/>
+            <rect x="16.51" y="7.604" width="1.49" height="3.843" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-682ms">
+        <ellipse cx="12" cy="20" rx="3.234" ry="0.9" fill="#000" opacity="0.024"/>
+        <g transform="translate(0 -7.117)">
+          <g transform="translate(12 20) rotate(-269.311) scale(0.953 1.057) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 0.478) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 0.478) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 0.478) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 0.478) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(47.448 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(-47.448 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="7.627" width="1.49" height="3.797" fill="#241611"/>
+            <rect x="16.51" y="7.627" width="1.49" height="3.797" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-796ms">
+        <ellipse cx="12" cy="20" rx="4.471" ry="0.9" fill="#000" opacity="0.068"/>
+        <g transform="translate(0 -5.534)">
+          <g transform="translate(12 20) rotate(-333.453) scale(0.963 1.044) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 0.594) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 0.594) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 0.594) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 0.594) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(36.894 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(-36.894 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="7.732" width="1.49" height="3.586" fill="#241611"/>
+            <rect x="16.51" y="7.732" width="1.49" height="3.586" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-909ms">
+        <ellipse cx="12" cy="20" rx="6.514" ry="0.9" fill="#000" opacity="0.138"/>
+        <g transform="translate(0 -2.989)">
+          <g transform="translate(12 20) rotate(-356.801) scale(0.98 1.024) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 0.781) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 0.781) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 0.781) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 0.781) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(19.927 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(-19.927 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="7.901" width="1.49" height="3.248" fill="#241611"/>
+            <rect x="16.51" y="7.901" width="1.49" height="3.248" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-1023ms">
+        <ellipse cx="12" cy="20" rx="9.067" ry="0.9" fill="#000" opacity="0.22"/>
+        <g transform="translate(0 -9.185e-16)">
+          <g transform="translate(12 20) rotate(-360) scale(1.007 0.991) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 1) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 1) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 1) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 1) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(6.123e-15 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(-6.123e-15 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+            <rect x="16.51" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-1137ms">
+        <ellipse cx="12" cy="20" rx="10.8" ry="0.9" fill="#000" opacity="0.22"/>
+        <g transform="translate(0 -9.185e-16)">
+          <g transform="translate(12 20) rotate(-360) scale(1.2 0.75) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 1) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 1) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 1) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 1) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(6.123e-15 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(-6.123e-15 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+            <rect x="16.51" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-1250ms">
+        <ellipse cx="12" cy="20" rx="9" ry="0.9" fill="#000" opacity="0.22"/>
+        <g transform="translate(0 -9.185e-16)">
+          <g transform="translate(12 20) rotate(-360) scale(1 1) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 1) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 1) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 1) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 1) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(6.123e-15 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(-6.123e-15 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+            <rect x="16.51" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-1364ms">
+        <ellipse cx="12" cy="20" rx="9" ry="0.9" fill="#000" opacity="0.22"/>
+        <g transform="translate(0 0)">
+          <g transform="translate(12 20) rotate(0) scale(1 1) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 1) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 1) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 1) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 1) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+            <rect x="16.51" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-1478ms">
+        <ellipse cx="12" cy="20" rx="9" ry="0.9" fill="#000" opacity="0.22"/>
+        <g transform="translate(0 0)">
+          <g transform="translate(12 20) rotate(0) scale(1 1) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 1) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 1) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 1) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 1) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+            <rect x="16.51" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+    <g class="abackflip" opacity="0" style="animation-delay:-1591ms">
+        <ellipse cx="12" cy="20" rx="9" ry="0.9" fill="#000" opacity="0.22"/>
+        <g transform="translate(0 0)">
+          <g transform="translate(12 20) rotate(0) scale(1 1) translate(-12 -20)">
+            <rect x="3" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3.745 17) translate(3.745 17) scale(1 1) translate(-3.745 -17)"/>
+            <rect x="6" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 6.745 17) translate(6.745 17) scale(1 1) translate(-6.745 -17)"/>
+            <rect x="15" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 15.745 17) translate(15.745 17) scale(1 1) translate(-15.745 -17)"/>
+            <rect x="18" y="17" width="1.49" height="3" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 18.745 17) translate(18.745 17) scale(1 1) translate(-18.745 -17)"/>
+            <rect x="0" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 3 12.5) translate(3 12.5) scale(1 1) translate(-3 -12.5)"/>
+            <rect x="21" y="10.95" width="3" height="3.1" fill="hsl(14 62% 59%)" transform="translate(0 0) rotate(0 21 12.5) translate(21 12.5) scale(1 1) translate(-21 -12.5)"/>
+            <rect x="3" y="5" width="18" height="12" fill="hsl(14 62% 59%)"/>
+            <rect x="6" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+            <rect x="16.51" y="8.1" width="1.49" height="2.85" fill="#241611"/>
+          </g>
+        </g>
+    </g>
+</svg>

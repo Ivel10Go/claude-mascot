@@ -9,8 +9,26 @@
 import { createMark } from './rig/mark.js';
 import { createPlayer } from './rig/player.js';
 import { createBody, step, resettle, GRAVITY } from './physics.js';
+import { anims } from './rig/anims.js';
+import { IDLE_ANIMATIONS } from '../../shared/catalog.js';
 
 const WIDTH = 96;
+
+// How the scheduler weights its choices. Walking and standing dominate on
+// purpose: a mascot that performs a trick every few seconds stops reading as
+// alive and starts reading as a screensaver.
+const BASE_CHOICES = [
+  'walk', 'walk', 'walk', 'walk', 'walk', 'walk',
+  'idle', 'idle', 'idle', 'idle',
+  'blink', 'blink', 'blink',
+  'lookUp', 'scan', 'think',
+  'jump', 'jump',
+];
+
+// How many slots the flourishes share between them, however many are enabled.
+// Fixed rather than one slot each, so turning them all on doesn't turn the
+// mascot into a circus.
+const FLOURISH_SLOTS = 5;
 
 // Backstop for a looping reaction whose release never arrives (a dropped IPC
 // message, a main-process timer that didn't fire). The main process is the
@@ -37,8 +55,9 @@ const MAX_RISE = 330;
 const rand = (lo, hi) => lo + Math.random() * (hi - lo);
 const pick = list => list[(Math.random() * list.length) | 0];
 
-export function createPet(layer, bounds) {
-  const mark = createMark(WIDTH);
+export function createPet(layer, bounds, getConfig = () => ({})) {
+  const scale = Math.max(0.4, Math.min(3, Number(getConfig().scale) || 1));
+  const mark = createMark(WIDTH * scale);
   const node = document.createElement('div');
   node.className = 'pet';
   node.style.width = `${mark.width}px`;
@@ -46,7 +65,7 @@ export function createPet(layer, bounds) {
   node.appendChild(mark.svg);
   layer.appendChild(node);
 
-  const player = createPlayer(mark, 'idle');
+  const player = createPlayer(mark, 'idle', getConfig);
   const margin = mark.width * 0.35;
   const body = createBody(rand(bounds.width * 0.25, bounds.width * 0.75), bounds.height);
 
@@ -154,16 +173,31 @@ export function createPet(layer, bounds) {
     return true;
   }
 
+  /**
+   * The pool the scheduler draws from, rebuilt when the settings change.
+   *
+   * Flourishes share a fixed number of slots rather than taking one each, so
+   * enabling every trick makes them more varied, not more frequent.
+   */
+  let pool = BASE_CHOICES;
+  let poolKey = null;
+
+  function refreshPool() {
+    const disabled = getConfig().idleAnims || {};
+    const enabled = IDLE_ANIMATIONS.filter(name => disabled[name] !== false);
+    const key = enabled.join(',');
+    if (key === poolKey) return;
+    poolKey = key;
+    if (!enabled.length) { pool = BASE_CHOICES; return; }
+    pool = BASE_CHOICES.slice();
+    for (let i = 0; i < FLOURISH_SLOTS; i++) pool.push(enabled[i % enabled.length]);
+  }
+
   function schedule(now) {
     // Weighted to look unhurried: mostly standing around, occasionally
     // wandering, with small punctuating beats.
-    const choice = pick([
-      'walk', 'walk', 'walk', 'walk',
-      'idle', 'idle', 'idle',
-      'blink', 'blink',
-      'lookUp', 'scan', 'wave', 'think',
-      'jump', 'jump',
-    ]);
+    refreshPool();
+    const choice = pick(pool);
 
     if (choice === 'jump') {
       if (tryJump(now)) return;
@@ -193,7 +227,13 @@ export function createPet(layer, bounds) {
       player.play('think', { now });
       return;
     }
-    // One-shots hand control straight back to the scheduler.
+    // A looping flourish never ends by itself, so it gets a scheduled slot.
+    // One-shots hand control straight back instead.
+    if (anims[choice]?.loop) {
+      state.until = now + rand(2600, 5200);
+      player.play(choice, { now });
+      return;
+    }
     state.until = Infinity;
     player.play(choice, { now, then: () => { state.until = 0; } });
   }
@@ -223,6 +263,28 @@ export function createPet(layer, bounds) {
     get wallTouch() { return Boolean(wallAt(body.x, body.y)); },
     /** How much of the torso is drawn in full colour — 1 full, 0 fully drained. */
     get bodyFill() { return lastPose ? lastPose.body.fill : 1; },
+    /** Rendered width in px. Confirms the size setting actually took. */
+    get width() { return mark.width; },
+    /**
+     * Which props are actually being drawn right now.
+     *
+     * The animation name alone says what was asked for, not what reached the
+     * geometry — a prop wired up wrongly would leave `playing` looking
+     * perfectly healthy while nothing appeared on screen.
+     */
+    get propsOn() {
+      if (!lastPose) return '';
+      const r = lastPose.props;
+      // Built as a string rather than an array, and read every frame: in the
+      // overwhelmingly common case — no prop in play — this allocates nothing
+      // at all, which is the rule everywhere else on the frame path.
+      let s = '';
+      if (r.headband > 0.05) s += 'headband,';
+      if (r.flag > 0.05) s += 'flag,';
+      if (r.confettiAmt > 0.05) s += 'confetti,';
+      if (r.sparkle > 0.05) s += 'sparkle,';
+      return s;
+    },
     setBounds,
     setPlatforms,
 
@@ -385,8 +447,11 @@ export function createPet(layer, bounds) {
       }
 
       // Walking is expressed as horizontal velocity so physics owns position.
+      // The speed multiplier is read per frame so the setting takes effect
+      // without restarting anything.
+      const pace = Math.max(0.2, Math.min(4, Number(getConfig().speed) || 1));
       body.vx = body.mode === 'ground' && state.walking
-        ? state.facing * state.speed
+        ? state.facing * state.speed * pace
         : body.mode === 'ground' ? 0 : body.vx;
 
       const events = step(body, dt, platforms, bounds, margin);

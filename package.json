@@ -13,7 +13,8 @@
     "doctor": "node scripts/doctor.mjs",
     "playground": "node scripts/dev-server.mjs",
     "dashboard": "electron . --dashboard",
-    "gen-icons": "node scripts/gen-icons.mjs"
+    "gen-icons": "node scripts/gen-icons.mjs",
+    "gen-previews": "node scripts/gen-anim-previews.mjs"
   },
   "devDependencies": {
     "electron": "^33.2.0",

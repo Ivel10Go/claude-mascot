@@ -20,6 +20,17 @@ const DEFAULTS = {
   // Lets the mascot stand on real window title bars. Costs a long-lived
   // PowerShell sidecar (~88MB RSS, ~0.6% of one core).
   windowEdges: true,
+
+  // Per-behaviour switches. All three are sparse maps where a missing key
+  // means "on": storing only the exceptions keeps the config small and, more
+  // importantly, means a new animation lights up for existing users instead
+  // of staying dark until someone goes looking for its checkbox.
+  reactions: {},   // reaction key (see shared/catalog.js) -> false to ignore
+  effects: {},     // metric-driven overlay name -> false to disable
+  idleAnims: {},   // flourish name -> false to keep out of the idle rotation
+
+  scale: 1,        // mascot size, 0.6 .. 2
+  speed: 1,        // walking speed multiplier, 0.4 .. 2.5
 };
 
 let file = null;

@@ -7,7 +7,7 @@ import { anims, applyModifiers } from './anims.js';
 
 const DEFAULT_BLEND_MS = 180;
 
-export function createPlayer(mark, fallback = 'idle') {
+export function createPlayer(mark, fallback = 'idle', getConfig = null) {
   // Three reusable buffers — nothing is allocated on the frame path.
   const bufCur = neutralPose();
   const bufPrev = neutralPose();
@@ -73,7 +73,7 @@ export function createPlayer(mark, fallback = 'idle') {
         prevName = null;
       }
 
-      applyModifiers(pose, metrics, now);
+      applyModifiers(pose, metrics, now, getConfig ? getConfig().effects : null);
       mark.apply(pose);
       return pose;
     },

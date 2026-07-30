@@ -106,7 +106,7 @@ export const rules = [
     when: m => (fiveHour(m)?.usedPercent ?? 100) < 15,
     until: m => (fiveHour(m)?.usedPercent ?? 0) > 30,
     text: 'limit.recovered', priority: 'normal', cooldownMs: 60 * MIN,
-    animation: 'celebrate',
+    animation: 'confetti',
   },
 
   // ── Context window ───────────────────────────────────────────────────

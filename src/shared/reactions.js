@@ -47,10 +47,12 @@ function reactionFor(hook) {
 
   switch (event) {
     case 'SessionStart':
-      return make('wave', 'session.start', 'normal', false, { cwd: hook.cwd });
+      return make('stretch', 'session.start', 'normal', false, { cwd: hook.cwd });
 
+    // Ties its headband on and holds that stance until the first tool runs —
+    // sticky at normal priority, so any PreToolUse takes it straight over.
     case 'UserPromptSubmit':
-      return make('lookUp', 'prompt.submit');
+      return make('headband', 'prompt.submit', 'normal', true);
 
     case 'PreToolUse': {
       const tool = hook.tool_name || '';
@@ -73,13 +75,13 @@ function reactionFor(hook) {
       return make('scan', 'notification', 'low', false, { message: hook.message });
 
     case 'PostToolUseFailure':
-      return make('stumble', 'tool.failed', 'high', false, { tool: hook.tool_name });
+      return make('facepalm', 'tool.failed', 'high', false, { tool: hook.tool_name });
 
     case 'PreCompact':
-      return make('curl', 'compact', 'high', false, { trigger: hook.trigger });
+      return make('meditate', 'compact', 'high', true, { trigger: hook.trigger });
 
     case 'Stop':
-      return make('celebrate', 'turn.done', 'high');
+      return make('victory', 'turn.done', 'high');
 
     case 'StopFailure':
       if (hook.error_type === 'rate_limit') {

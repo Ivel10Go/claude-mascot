@@ -27,14 +27,33 @@ const os = require('node:os');
  * run whether or not anything was installed. The only honest signal is our
  * daemon URL appearing in the settings Claude Code actually reads.
  */
-function hooksInstalled() {
+function claudeSettings() {
   try {
-    const file = path.join(os.homedir(), '.claude', 'settings.json');
-    return fs.readFileSync(file, 'utf8').includes('/hook');
+    return fs.readFileSync(path.join(os.homedir(), '.claude', 'settings.json'), 'utf8');
   } catch {
-    return false;
+    return '';
   }
 }
+
+function hooksInstalled() {
+  return claudeSettings().includes('/hook');
+}
+
+/**
+ * Whether our statusLine forwarder is registered with Claude Code.
+ *
+ * Being registered is necessary but not sufficient: the status line is a
+ * terminal-UI feature, so a session that never renders one never runs the
+ * forwarder, and no rate limits ever arrive. Reporting the two facts
+ * separately is what makes that distinguishable in the dashboard.
+ */
+function statusLineInstalled() {
+  return claudeSettings().includes('mascot-statusline');
+}
+
+// When the last hook actually reached us. Proves the daemon is wired up even
+// when the status line never runs.
+let lastHookAt = null;
 
 // A second copy would spawn duplicate overlays and fight over the daemon port.
 if (!app.requestSingleInstanceLock()) {
@@ -80,8 +99,13 @@ function release(reason) {
 }
 
 function dispatch(hook) {
+  lastHookAt = Date.now();
   const reaction = reactionFor(hook);
   if (!reaction) return;
+
+  // Switched off in the settings: drop it here rather than in the renderer, so
+  // a muted event costs nothing and can't hold the rig or trigger a bubble.
+  if (config.get().reactions?.[reaction.key] === false) return;
 
   const now = Date.now();
   if (!supersedes(held, reaction, now)) return;
@@ -106,6 +130,21 @@ function dispatch(hook) {
   store.patchQuiet('intent', { animation: reaction.animation, key: reaction.key, at: Date.now() });
 }
 
+/**
+ * Everything the app believes, plus the facts about its own wiring that the
+ * store doesn't hold. The dashboard and `/state` must show the same thing, so
+ * they read the same function.
+ */
+function fullState() {
+  return {
+    ...store.get(),
+    hooksInstalled: hooksInstalled(),
+    lastHookAt,
+    statusLine: { installed: statusLineInstalled(), ...fromStatusLine.statusLineHealth() },
+    displays: overlay.listDisplays(),
+  };
+}
+
 async function startDaemon() {
   const creds = credentials.load();
   daemon = createDaemon({
@@ -113,7 +152,7 @@ async function startDaemon() {
     token: creds.token,
     onHook: dispatch,
     onStatus: payload => fromStatusLine.apply(payload),
-    getState: () => store.get(),
+    getState: fullState,
   });
 
   try {
@@ -266,11 +305,7 @@ app.whenReady().then(async () => {
   });
 
   dashboard.init({
-    getState: () => ({
-      ...store.get(),
-      hooksInstalled: hooksInstalled(),
-      displays: overlay.listDisplays(),
-    }),
+    getState: fullState,
     getConfig: () => config.get(),
     setConfig: patch => config.set(patch),
   });

@@ -16,6 +16,17 @@ function until(at, locale = 'de') {
   return mm === 0 ? `${h} h` : `${h} h ${mm} min`;
 }
 
+/** "gerade eben", "12 min", "2 h 5 min" — how long since `at` (epoch ms). */
+function ago(at, locale = 'de') {
+  if (!at) return locale === 'de' ? 'nie' : 'never';
+  const mins = Math.round((Date.now() - at) / 60_000);
+  if (mins <= 0) return locale === 'de' ? 'gerade eben' : 'just now';
+  const h = Math.floor(mins / 60);
+  const mm = mins % 60;
+  if (h <= 0) return `${mm} min`;
+  return mm === 0 ? `${h} h` : `${h} h ${mm} min`;
+}
+
 /** Compact token counts: 1.2M / 830k. */
 function tokens(n, locale = 'de') {
   if (!Number.isFinite(n)) return '?';
@@ -51,4 +62,4 @@ function fill(template, vars) {
   );
 }
 
-export { until, tokens, usd, bytes, pct, fill };
+export { until, ago, tokens, usd, bytes, pct, fill };
