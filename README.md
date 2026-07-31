@@ -18,6 +18,13 @@ which is QML/Quickshell for Linux+Wayland. This is a ground-up Windows build —
 none of that code is portable — but the character geometry follows the same
 24×24 authoring grid so the two look like the same creature.
 
+> **Not an Anthropic product.** This is an unaffiliated fan tool, not endorsed
+> by, sponsored by, or connected with Anthropic. "Claude" and "Anthropic" are
+> trademarks of Anthropic, PBC; the character drawn here is their mascot and
+> the coral it is drawn in is their brand colour. The [MIT licence](LICENSE)
+> covers this repository's source code and nothing else — the name and the
+> character are not the author's to license on.
+
 ## Animations
 
 **[→ The full gallery, all 42 of them](docs/ANIMATIONS.md)**
@@ -208,6 +215,22 @@ confetti it isn't throwing.
   back to a correct still frame rather than a blank or a pile — frame 0 carries
   a plain `opacity="1"` attribute for exactly that case.
 
+## Credits
+
+The animation work owes a lot to Ayotomiwa Wale-Durojaye's
+[Reverse-Engineering Claude AI's Mascot Animations with SVG and GSAP](https://tympanus.net/codrops/2026/05/05/reverse-engineering-claude-ais-mascot-animations-with-svg-and-gsap/)
+on Codrops. None of that code is used here — the rig is procedural rather than
+GSAP timelines — but the article is where the ideas that make the motion read
+as weight came from: asymmetric hop easing, per-limb phase offsets, and holding
+a cycle at its extremes instead of sweeping evenly through them.
+
+The character and the 24×24 authoring grid come from
+[claude-caelestia-shell](https://github.com/Ivel10Go/claude-caelestia-shell),
+which is GPL-3.0 and by the same author.
+
 ## Licence
 
-MIT
+[MIT](LICENSE) — for the source code.
+
+Not for the name or the character. See the note at the bottom of the licence
+file, and the disclaimer at the top of this README.
