@@ -19,19 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-
----
-
-NOTE ON TRADEMARKS AND THE CHARACTER
-
-The MIT licence above covers the source code of this project and nothing else.
-
-"Claude" and "Anthropic" are trademarks of Anthropic, PBC. The character this
-project draws is Anthropic's mascot, and the coral colour it is drawn in is
-Anthropic's brand colour. None of that is licensed here, and none of it is the
-author's to license. This project is an unaffiliated fan tool; it is not
-endorsed by, sponsored by, or connected with Anthropic.
-
-If you fork this, the code is yours to use under the terms above. The name and
-the character are not.

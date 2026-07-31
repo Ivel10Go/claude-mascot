@@ -22,8 +22,8 @@ none of that code is portable — but the character geometry follows the same
 > by, sponsored by, or connected with Anthropic. "Claude" and "Anthropic" are
 > trademarks of Anthropic, PBC; the character drawn here is their mascot and
 > the coral it is drawn in is their brand colour. The [MIT licence](LICENSE)
-> covers this repository's source code and nothing else — the name and the
-> character are not the author's to license on.
+> covers this repository's source code and nothing else — see
+> [TRADEMARKS.md](TRADEMARKS.md).
 
 ## Animations
 
@@ -232,5 +232,4 @@ which is GPL-3.0 and by the same author.
 
 [MIT](LICENSE) — for the source code.
 
-Not for the name or the character. See the note at the bottom of the licence
-file, and the disclaimer at the top of this README.
+Not for the name or the character: see [TRADEMARKS.md](TRADEMARKS.md).

@@ -260,7 +260,7 @@ ${catalog.EFFECTS.map(e => `| \`${e.name}\` | ${e.en} |`).join('\n')}
 
 The character on this page is Anthropic's mascot, and this is an unaffiliated
 fan project — not endorsed by, sponsored by, or connected with Anthropic. See
-the [licence note](../LICENSE) for what the MIT licence does and does not cover.
+[TRADEMARKS.md](../TRADEMARKS.md) for what the MIT licence does not cover.
 `;
 
 writeFileSync(join(ROOT, 'docs', 'ANIMATIONS.md'), gallery);
